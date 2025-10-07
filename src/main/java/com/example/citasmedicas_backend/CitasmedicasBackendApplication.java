@@ -9,5 +9,4 @@ public class CitasmedicasBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CitasmedicasBackendApplication.class, args);
 	}
-
 }
