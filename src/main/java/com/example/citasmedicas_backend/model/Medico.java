@@ -45,4 +45,37 @@ public class Medico {
         this.servicio = servicio;
         this.cedulaProfecional = cedulaProfecional;
     }
+    
+    // Getters y setters básicos necesarios
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Usuario getUsuario() {
+        return usuario;
+    }
+    
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+    
+    public Servicio getServicio() {
+        return servicio;
+    }
+    
+    public void setServicio(Servicio servicio) {
+        this.servicio = servicio;
+    }
+    
+    public String getCedulaProfecional() {
+        return cedulaProfecional;
+    }
+    
+    public void setCedulaProfecional(String cedulaProfecional) {
+        this.cedulaProfecional = cedulaProfecional;
+    }
 }
