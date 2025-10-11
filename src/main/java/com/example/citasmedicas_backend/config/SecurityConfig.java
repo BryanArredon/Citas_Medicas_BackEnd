@@ -16,8 +16,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Desactiva CSRF para APIs REST
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/api/areas/**").permitAll() // Permite acceso sin autenticación
-                        .requestMatchers("/api/disponibilidad/**").permitAll()
+                        .requestMatchers("/api/**").permitAll() // Permite acceso sin autenticación
+                        .requestMatchers("/api/**").permitAll()
                         // Agrega aquí otros endpoints públicos
                         .anyRequest().permitAll() // ← OJO: esto desactiva la seguridad para TODO
                 );
