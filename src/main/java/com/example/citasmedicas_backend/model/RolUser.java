@@ -1,52 +1,25 @@
 package com.example.citasmedicas_backend.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
-@Table(name = "rolUser")
+@Table(name = "rol_user") // ← Nombre exacto de tu tabla
 public class RolUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idRol")
     private Long idRol;
 
-    @Column(name = "nombre-rol", nullable = false)
+    @Column(name = "nombreRol", nullable = false)
     private String nombreRol;
 
-    //Constructor vacio
-    public RolUser () {}
+    public RolUser() {}
 
-    //Constructor con parametros
+    // Getters y setters
+    public Long getIdRol() { return idRol; }
+    public void setIdRol(Long idRol) { this.idRol = idRol; }
 
-
-    public RolUser(
-            Long idRol,
-            String nombreRol
-    ) {
-        this.idRol = idRol;
-        this.nombreRol = nombreRol;
-    }
-
-    //Getters y Setters
-
-    public Long getIdRol() {
-        return idRol;
-    }
-
-    public void setIdRol(Long idRol) {
-        this.idRol = idRol;
-    }
-
-    public String getNombreRol() {
-        return nombreRol;
-    }
-
-    public void setNombreRol(String nombreRol) {
-        this.nombreRol = nombreRol;
-    }
+    public String getNombreRol() { return nombreRol; }
+    public void setNombreRol(String nombreRol) { this.nombreRol = nombreRol; }
 }
