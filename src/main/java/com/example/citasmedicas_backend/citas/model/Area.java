@@ -17,6 +17,9 @@ public class Area { // ← singular
     @Column(name = "descripcion")
     private String descripcion;
 
+    @Column(name = "estatus")
+    private boolean estatus;
+
     // Constructor vacío
     public Area() {}
 
@@ -25,6 +28,7 @@ public class Area { // ← singular
         this.id = id;
         this.nombreArea = nombreArea;
         this.descripcion = descripcion;
+        this.estatus = true; // Por defecto, el área está activa al crearla
     }
 
     // Getters y setters
@@ -50,5 +54,13 @@ public class Area { // ← singular
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public boolean getEstatus() {
+        return estatus;
+    }
+
+    public void setEstatus(boolean estatus) {
+        this.estatus = estatus;
     }
 }

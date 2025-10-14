@@ -2,12 +2,12 @@ CREATE DATABASE IF NOT EXISTS DBCitasMedicas;
 
 USE DBCitasMedicas;
 
-CREATE TABLE tRol (
+CREATE TABLE Rol (
     idRol INT PRIMARY KEY AUTO_INCREMENT,
     nombreRol VARCHAR(50) NOT NULL
 );
 
-INSERT INTO tRol (nombreRol) VALUES ('Administrador'), ('Médico'), ('Paciente');
+INSERT INTO rol_user (nombre_rol) VALUES ('Administrador'), ('Médico'), ('Paciente');
 -- Roles:
 -- 1 Administrador
 -- 2 Médico
