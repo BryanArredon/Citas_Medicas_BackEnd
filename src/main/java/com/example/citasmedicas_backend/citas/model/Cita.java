@@ -66,3 +66,4 @@ public class Cita {
     public String getMotivo() { return motivo; }
     public void setMotivo(String motivo) { this.motivo = motivo; }
 }
+
