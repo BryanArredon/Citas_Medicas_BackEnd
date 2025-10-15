@@ -1,6 +1,8 @@
 package com.example.citasmedicas_backend.citas.controller;
 
+import com.example.citasmedicas_backend.citas.dto.CitaProximaDTO;
 import com.example.citasmedicas_backend.citas.model.Cita;
+import com.example.citasmedicas_backend.citas.repository.CitaRepository;
 import com.example.citasmedicas_backend.citas.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,9 @@ import java.util.Optional;
 public class CitaController {
     @Autowired
     private CitaService citaService;
+
+    @Autowired
+    private CitaRepository citaRepository;
 
     @GetMapping
     public List<Cita> getAllCitas() {
@@ -47,6 +52,42 @@ public class CitaController {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/proximas/{usuarioId}")
+    public ResponseEntity<List<CitaProximaDTO>> getCitasProximasByUsuario(@PathVariable Long usuarioId) {
+        try {
+            List<CitaProximaDTO> citasProximas = citaRepository.findCitasProximasByUsuarioId(usuarioId);
+            
+            if (citasProximas.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            
+            return ResponseEntity.ok(citasProximas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/proximas/{usuarioId}/limit/{limit}")
+    public ResponseEntity<List<CitaProximaDTO>> getCitasProximasByUsuarioWithLimit(
+            @PathVariable Long usuarioId, 
+            @PathVariable int limit) {
+        try {
+            List<CitaProximaDTO> todasLasCitas = citaRepository.findCitasProximasByUsuarioId(usuarioId);
+            
+            List<CitaProximaDTO> citasLimitadas = todasLasCitas.stream()
+                    .limit(limit)
+                    .toList();
+            
+            if (citasLimitadas.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            
+            return ResponseEntity.ok(citasLimitadas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
