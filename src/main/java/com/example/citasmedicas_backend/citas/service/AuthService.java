@@ -35,7 +35,7 @@ public class AuthService   {
                 usuario.getIdUsuario(),
                 usuario.getNombre(),
                 usuario.getCorreoElectronico(),
-                usuario.getRolUser().getNombreRol()
+                usuario.getRolUser().getIdRol()
         );
     }
 
