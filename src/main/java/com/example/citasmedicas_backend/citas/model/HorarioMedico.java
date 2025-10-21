@@ -16,7 +16,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "horarioMedico")
-public class HorarioMedico {
+public class
+HorarioMedico {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +38,9 @@ public class HorarioMedico {
 
     @Column(name = "duracion")
     private Integer duracion;
+
+    @Column(name = "valid_until")
+    private LocalDate validUntil;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Estado medico", nullable = false)
@@ -63,6 +67,14 @@ public class HorarioMedico {
         this.horarioFin = horarioFin;
         this.duracion = duracion;
         this.estadoMedico = estadoMedico;
+    }
+
+    public LocalDate getValidUntil() {
+        return validUntil;
+    }
+
+    public void setValidUntil(LocalDate validUntil) {
+        this.validUntil = validUntil;
     }
 
     //Gettes y setters

@@ -4,10 +4,20 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.citasmedicas_backend.citas.model.HorarioMedico;
 import com.example.citasmedicas_backend.citas.service.HorarioMedicoService;
@@ -18,6 +28,11 @@ public class HorarioMedicoController {
 
     @Autowired
     private HorarioMedicoService service;
+    
+    @Autowired
+    private com.example.citasmedicas_backend.citas.service.MedicoService medicoService;
+
+    private static final Logger logger = LoggerFactory.getLogger(HorarioMedicoController.class);
 
     @GetMapping
     public List<HorarioMedico> listAll() {
@@ -32,18 +47,127 @@ public class HorarioMedicoController {
     }
 
     @PostMapping
-    public ResponseEntity<HorarioMedico> create(@RequestBody HorarioMedico horario) {
-        HorarioMedico saved = service.save(horario);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<?> create(@RequestBody HorarioMedico horario) {
+        // Resolve medico reference if only id is provided in payload
+        logger.info("POST /api/horarios payload: {}", horario);
+        try {
+            if (horario.getMedico() != null) {
+                Long mid = null;
+                try { mid = horario.getMedico().getId(); } catch (Exception ignored) {}
+                if (mid == null) {
+                    // try field idMedico if client sent that
+                    try {
+                        java.lang.reflect.Field f = horario.getMedico().getClass().getDeclaredField("idMedico");
+                        f.setAccessible(true);
+                        Object v = f.get(horario.getMedico());
+                        if (v instanceof Number) mid = ((Number)v).longValue();
+                    } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                    // if still null, try resolve by medico.usuario.nombre
+                    if (mid == null) {
+                        try {
+                            java.lang.reflect.Field usuarioField = horario.getMedico().getClass().getDeclaredField("usuario");
+                            usuarioField.setAccessible(true);
+                            Object usuarioObj = usuarioField.get(horario.getMedico());
+                            if (usuarioObj != null) {
+                                try {
+                                    java.lang.reflect.Field nombreField = usuarioObj.getClass().getDeclaredField("nombre");
+                                    nombreField.setAccessible(true);
+                                    Object nombreVal = nombreField.get(usuarioObj);
+                                    if (nombreVal instanceof String) {
+                                        com.example.citasmedicas_backend.citas.model.Medico found = medicoService.findByUsuarioNombre((String) nombreVal);
+                                        if (found != null) mid = found.getId();
+                                    }
+                                } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                    }
+                }
+
+                if (mid != null) {
+                    com.example.citasmedicas_backend.citas.model.Medico m = medicoService.findById(mid);
+                    horario.setMedico(m);
+                }
+            }
+        } catch (Exception e) {
+            // log and continue; save() will likely fail and return 500 which will be propagated
+            logger.error("Error resolviendo medico en payload", e);
+        }
+
+        // If medico couldn't be resolved, return 400 instead of letting JPA fail with a 500
+        if (horario.getMedico() == null) {
+            logger.warn("No se pudo resolver el medico del payload; devolviendo 400. Payload: {}", horario);
+            return ResponseEntity.badRequest().body("Medico no encontrado o no proporcionado en el payload");
+        }
+
+        try {
+            HorarioMedico saved = service.save(horario);
+            return ResponseEntity.ok(saved);
+        } catch (Exception ex) {
+            logger.error("Error guardando HorarioMedico", ex);
+            return ResponseEntity.status(500).body("Error interno al guardar horario: " + ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<HorarioMedico> update(@PathVariable Long id, @RequestBody HorarioMedico horario) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody HorarioMedico horario) {
         HorarioMedico existing = service.findById(id);
         if (existing == null) return ResponseEntity.notFound().build();
         horario.setId(id);
-        HorarioMedico saved = service.save(horario);
-        return ResponseEntity.ok(saved);
+
+        // Resolve medico similar to create
+        try {
+            if (horario.getMedico() != null) {
+                Long mid = null;
+                try { mid = horario.getMedico().getId(); } catch (Exception ignored) {}
+                if (mid == null) {
+                    try {
+                        java.lang.reflect.Field f = horario.getMedico().getClass().getDeclaredField("idMedico");
+                        f.setAccessible(true);
+                        Object v = f.get(horario.getMedico());
+                        if (v instanceof Number) mid = ((Number)v).longValue();
+                    } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                    // if still null, try resolve by medico.usuario.nombre
+                    if (mid == null) {
+                        try {
+                            java.lang.reflect.Field usuarioField = horario.getMedico().getClass().getDeclaredField("usuario");
+                            usuarioField.setAccessible(true);
+                            Object usuarioObj = usuarioField.get(horario.getMedico());
+                            if (usuarioObj != null) {
+                                try {
+                                    java.lang.reflect.Field nombreField = usuarioObj.getClass().getDeclaredField("nombre");
+                                    nombreField.setAccessible(true);
+                                    Object nombreVal = nombreField.get(usuarioObj);
+                                    if (nombreVal instanceof String) {
+                                        com.example.citasmedicas_backend.citas.model.Medico found = medicoService.findByUsuarioNombre((String) nombreVal);
+                                        if (found != null) mid = found.getId();
+                                    }
+                                } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+                    }
+                }
+
+                if (mid != null) {
+                    com.example.citasmedicas_backend.citas.model.Medico m = medicoService.findById(mid);
+                    horario.setMedico(m);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error resolviendo medico en update()", e);
+        }
+
+        if (horario.getMedico() == null) {
+            logger.warn("No se pudo resolver el medico para update id={}; devolviendo 400. Payload: {}", id, horario);
+            return ResponseEntity.badRequest().body("Medico no encontrado o no proporcionado en el payload");
+        }
+
+        try {
+            HorarioMedico saved = service.save(horario);
+            return ResponseEntity.ok(saved);
+        } catch (Exception ex) {
+            logger.error("Error guardando HorarioMedico en update", ex);
+            return ResponseEntity.status(500).body("Error interno al guardar horario: " + ex.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
