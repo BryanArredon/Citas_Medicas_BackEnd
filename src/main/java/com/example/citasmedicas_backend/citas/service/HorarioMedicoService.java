@@ -5,11 +5,12 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.citasmedicas_backend.citas.model.EstadoMedico;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.citasmedicas_backend.citas.model.EstadoMedico;
 import com.example.citasmedicas_backend.citas.model.HorarioMedico;
 import com.example.citasmedicas_backend.citas.repository.HorarioMedicoRepository;
 
@@ -21,7 +22,23 @@ public class HorarioMedicoService {
 	private HorarioMedicoRepository horarioMedicoRepository;
 
 	// Create or update
+	@Transactional(propagation = Propagation.REQUIRED)
 	public HorarioMedico save(HorarioMedico horario) {
+		if (horario.getMedico() == null || horario.getMedico().getId() == null) {
+			throw new IllegalArgumentException("Horario requiere un médico persistido");
+		}
+
+		// Si no se proporcionó validUntil, fijarlo a fecha + 1 mes (o hoy +1 mes si fecha es null)
+		try {
+			if (horario.getValidUntil() == null) {
+				if (horario.getFecha() != null) {
+					horario.setValidUntil(horario.getFecha().plusMonths(1));
+				} else {
+					horario.setValidUntil(java.time.LocalDate.now().plusMonths(1));
+				}
+			}
+		} catch (Exception ignored) {}
+
 		return horarioMedicoRepository.save(horario);
 	}
 

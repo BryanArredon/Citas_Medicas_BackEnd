@@ -5,10 +5,10 @@ public class AuthResponse {
     private Long idUsuario;
     private String nombre;
     private String correoElectronico;
-    private String rol;
+    private long rol;
 
     // Constructor
-    public AuthResponse(Long idUsuario, String nombre, String correoElectronico, String rol) {
+    public AuthResponse(Long idUsuario, String nombre, String correoElectronico, long rol) {
         this.idUsuario = idUsuario;
         this.nombre = nombre;
         this.correoElectronico = correoElectronico;
@@ -19,6 +19,6 @@ public class AuthResponse {
     public Long getIdUsuario() { return idUsuario; }
     public String getNombre() { return nombre; }
     public String getCorreoElectronico() { return correoElectronico; }
-    public String getRol() { return rol; }
+    public Long getRol() { return rol; }
 
 }

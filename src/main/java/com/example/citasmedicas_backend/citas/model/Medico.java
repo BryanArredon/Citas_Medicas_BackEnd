@@ -22,7 +22,7 @@ public class Medico {
     private Usuario usuario;
 
     @ManyToOne
-    @JoinColumn(name = "idServicio", nullable = false)
+    @JoinColumn(name = "idServicio", nullable = true)
     private Servicio servicio;
 
     @Column(name = "cedula-profecional", nullable = false)

@@ -3,20 +3,26 @@ package com.example.citasmedicas_backend.citas.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.citasmedicas_backend.citas.model.Medico;
 import com.example.citasmedicas_backend.citas.model.Paciente;
 import com.example.citasmedicas_backend.citas.model.RolUser;
 import com.example.citasmedicas_backend.citas.model.Usuario;
 import com.example.citasmedicas_backend.citas.repository.PacienteRepository;
 import com.example.citasmedicas_backend.citas.repository.RolUserRepository;
+import com.example.citasmedicas_backend.citas.repository.ServicioRepository;
 import com.example.citasmedicas_backend.citas.repository.UsuarioRepository;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class) // Añadir esto para garantizar rollback
 public class UsuarioService {
+
+	private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
@@ -28,6 +34,12 @@ public class UsuarioService {
 
 	@Autowired
 	private RolUserRepository rolUserRepository;
+
+	@Autowired
+	private ServicioRepository servicioRepository;
+
+	@Autowired
+	private MedicoService medicoService;
 
 	public Usuario save(Usuario usuario) {
 		// Resolve role: if client passed a RolUser with only nombreRol, fetch persisted RolUser
@@ -57,15 +69,26 @@ public class UsuarioService {
 			}
 		}
 
-		// If user's role is MEDICO, do NOT auto-create a Medico row here because
-		// the Medico entity requires additional non-null fields (servicio, cedulaProfesional)
-		// that are not available from a simple user payload. Creating a stub causes
-		// database constraint errors at flush/commit and marks the transaction rollback-only.
-		// Instead, require that Medico rows are created via the Medico API/flow when the
-		// necessary data is available.
-		if (rol != null && "MEDICO".equalsIgnoreCase(rol.getNombreRol())) {
-			// log/warn: admin should create a Medico record using the Medico endpoint
-			System.out.println("Usuario creado con rol MEDICO: crear entidad Medico mediante el endpoint de Medicos cuando se disponga de servicio y cedula.");
+		// Si el usuario es médico, crear la entidad Medico y sus horarios
+		if (rol != null && (rol.getIdRol() == 2 || "MEDICO".equalsIgnoreCase(rol.getNombreRol()))) {
+			logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
+
+			// No asignar servicio ni área automáticamente: lo hará el administrador.
+			// Solo crear la entidad Medico mínima vinculada al Usuario para que exista el registro;
+			// el admin asignará servicio/área y otros datos posteriormente.
+			Medico medico = new Medico();
+			medico.setUsuario(saved);
+			// No setServicio: lo decidirá el administrador
+			medico.setCedulaProfecional("AUTO-" + saved.getIdUsuario());
+
+			try {
+				medico = medicoService.createMedico(medico); // Este método crea los horarios
+				logger.info("Médico creado exitosamente (sin servicio/área): id={}", medico.getId());
+			} catch (Exception e) {
+				String error = "Error creando el médico: " + e.getMessage();
+				logger.error(error, e);
+				throw new RuntimeException(error, e);
+			}
 		}
 
 		return saved;

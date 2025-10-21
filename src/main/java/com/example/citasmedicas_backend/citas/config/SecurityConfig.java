@@ -5,22 +5,29 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desactiva CSRF para APIs REST
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/api/**").permitAll() // Permite acceso sin autenticación
-                        .requestMatchers("/api/**").permitAll()
-                        // Agrega aquí otros endpoints públicos
-                        .anyRequest().permitAll() // ← OJO: esto desactiva la seguridad para TODO
-                );
+            .cors(cors -> cors.configurationSource(corsConfigurationSource)) // Habilita CORS
+            .csrf(csrf -> csrf.disable()) // Desactiva CSRF para APIs REST
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/api/auth/**").permitAll() // Permite acceso sin autenticación al login
+                .requestMatchers("/api/usuarios/**").permitAll() // Permite acceso a usuarios
+                .requestMatchers("/api/**").permitAll() // El resto de APIs requieren autenticación
+                .anyRequest().permitAll() // Otras rutas públicas
+            );
         return http.build();
     }
 }
