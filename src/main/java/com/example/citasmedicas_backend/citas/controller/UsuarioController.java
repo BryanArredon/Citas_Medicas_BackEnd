@@ -48,9 +48,18 @@ public class UsuarioController {
         Usuario existing = usuarioService.findById(id);
         if (existing == null) return ResponseEntity.notFound().build();
 
-        // update fields (simple replace)
-        usuario.setIdUsuario(id);
-        Usuario saved = usuarioService.save(usuario);
+        // Update only provided fields, keep required fields from existing user
+        if (usuario.getNombre() != null) existing.setNombre(usuario.getNombre());
+        if (usuario.getApellidoPaterno() != null) existing.setApellidoPaterno(usuario.getApellidoPaterno());
+        if (usuario.getApellidoMaterno() != null) existing.setApellidoMaterno(usuario.getApellidoMaterno());
+        if (usuario.getSexo() != null) existing.setSexo(usuario.getSexo());
+        if (usuario.getFechaNacimiento() != null) existing.setFechaNacimiento(usuario.getFechaNacimiento());
+        if (usuario.getDireccion() != null) existing.setDireccion(usuario.getDireccion());
+        if (usuario.getTelefono() != null) existing.setTelefono(usuario.getTelefono());
+        if (usuario.getCorreoElectronico() != null) existing.setCorreoElectronico(usuario.getCorreoElectronico());
+        // Keep contraseña and rolUser from existing user
+
+        Usuario saved = usuarioService.save(existing);
         return ResponseEntity.ok(saved);
     }
 

@@ -1,11 +1,17 @@
 package com.example.citasmedicas_backend.citas.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.citasmedicas_backend.citas.model.Agenda;
 import com.example.citasmedicas_backend.citas.service.AgendaService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/agendas")
@@ -21,5 +27,10 @@ public class AgendaController {
     @GetMapping
     public List<Agenda> getAllAgendas() {
         return agendaService.getAllAgendas();
+    }
+
+    @GetMapping("/medico/{medicoId}")
+    public List<Agenda> getAgendasByMedico(@PathVariable Long medicoId) {
+        return agendaService.getAgendasByMedico(medicoId);
     }
 }
