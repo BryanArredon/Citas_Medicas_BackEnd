@@ -1,8 +1,18 @@
 package com.example.citasmedicas_backend.citas.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "historialClinico")
@@ -34,6 +44,9 @@ public class HistorialClinico {
     @Column(name = "tratamiento", length = 255)
     private String tratamiento;
 
+    @Column(name = "medicamentos", columnDefinition = "TEXT")
+    private String medicamentos;
+
     @Column(name = "notasAdicionales", columnDefinition = "TEXT")
     private String notasAdicionales;
 
@@ -64,6 +77,9 @@ public class HistorialClinico {
 
     public String getTratamiento() { return tratamiento; }
     public void setTratamiento(String tratamiento) { this.tratamiento = tratamiento; }
+
+    public String getMedicamentos() { return medicamentos; }
+    public void setMedicamentos(String medicamentos) { this.medicamentos = medicamentos; }
 
     public String getNotasAdicionales() { return notasAdicionales; }
     public void setNotasAdicionales(String notasAdicionales) { this.notasAdicionales = notasAdicionales; }
