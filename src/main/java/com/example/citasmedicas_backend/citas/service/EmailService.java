@@ -32,6 +32,13 @@ public class EmailService {
      * Genera HTML para correo de bienvenida a nuevos usuarios
      */
     public String generarHtmlBienvenida(String nombreUsuario, String emailUsuario) {
+        return generarHtmlBienvenida(nombreUsuario, emailUsuario, null);
+    }
+
+    /**
+     * Genera HTML para correo de bienvenida a nuevos usuarios
+     */
+    public String generarHtmlBienvenida(String nombreUsuario, String emailUsuario, String logoUrl) {
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>");
         html.append("<html lang=\"es\">");
@@ -43,7 +50,6 @@ public class EmailService {
         html.append("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; min-height: 100vh; }");
         html.append(".container { max-width: 600px; margin: 20px auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb; }");
         html.append(".header { background: linear-gradient(135deg, #1e40af 0%, #0f766e 100%); color: white; padding: 40px 30px; text-align: center; }");
-        html.append(".logo { width: 50px; height: 50px; background: white; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px; }");
         html.append(".content { padding: 40px 30px; color: #374151; line-height: 1.7; }");
         html.append(".button { display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #0f766e 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 20px 0; box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2); }");
         html.append(".button:hover { box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3); }");
@@ -61,16 +67,13 @@ public class EmailService {
         html.append("<body>");
         html.append("<div class=\"container\">");
         html.append("<div class=\"header\">");
-        html.append("<div class=\"logo\">");
-        html.append("<span style=\"font-size: 24px; color: #1e40af; font-weight: bold;\">M</span>");
-        html.append("</div>");
         html.append("<h1 style=\"margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;\">MediCitas</h1>");
         html.append("<p style=\"margin: 8px 0 0 0; opacity: 0.9; font-size: 14px; font-weight: 400;\">Sistema de Gestión Médica Integral</p>");
         html.append("</div>");
         html.append("<div class=\"content\">");
         html.append("<div class=\"welcome-message\">");
-        html.append("<h2 style=\"margin: 0 0 10px 0; color: #1f2937; font-size: 20px; font-weight: 600;\">Bienvenido(a), ").append(nombreUsuario).append("</h2>");
-        html.append("<p style=\"margin: 0; color: #4b5563; font-size: 15px;\">Su registro en MediCitas ha sido completado exitosamente. A continuación, encontrará toda la información necesaria para comenzar a utilizar nuestros servicios.</p>");
+        html.append("<h2 style=\"margin: 0 0 10px 0; color: #1f2937; font-size: 20px; font-weight: 600;\">Estimado(a) ").append(nombreUsuario).append("</h2>");
+        html.append("<p style=\"margin: 0; color: #4b5563; font-size: 15px;\">Le damos la bienvenida a MediCitas. Su cuenta ha sido creada y validada satisfactoriamente. A continuación, encontrará información relevante sobre las funcionalidades disponibles en nuestra plataforma.</p>");
         html.append("</div>");
 
         html.append("<div class=\"info-section\">");
@@ -81,22 +84,22 @@ public class EmailService {
         html.append("</div>");
 
         html.append("<div class=\"features\">");
-        html.append("<h3 style=\"margin: 0 0 20px 0; color: #1f2937; font-size: 16px; font-weight: 600;\">Servicios disponibles en MediCitas</h3>");
+        html.append("<h3 style=\"margin: 0 0 20px 0; color: #1f2937; font-size: 16px; font-weight: 600;\">Funcionalidades del Sistema MediCitas</h3>");
         html.append("<div class=\"feature-item\">");
         html.append("<div class=\"feature-icon\">1</div>");
-        html.append("<div><strong>Agendamiento de citas</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Reserve consultas médicas con nuestros especialistas de manera rápida y sencilla.</span></div>");
+        html.append("<div><strong>Gestión de Citas Médicas</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Sistema integrado para programación de consultas con especialistas según disponibilidad y especialidad.</span></div>");
         html.append("</div>");
         html.append("<div class=\"feature-item\">");
         html.append("<div class=\"feature-icon\">2</div>");
-        html.append("<div><strong>Historial clínico digital</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Acceda a su expediente médico completo desde cualquier dispositivo.</span></div>");
+        html.append("<div><strong>Expediente Clínico Electrónico</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Acceso seguro a historial médico completo, con confidencialidad garantizada según normativas vigentes.</span></div>");
         html.append("</div>");
         html.append("<div class=\"feature-item\">");
         html.append("<div class=\"feature-icon\">3</div>");
-        html.append("<div><strong>Recordatorios automáticos</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Reciba notificaciones oportunas sobre sus citas y tratamientos.</span></div>");
+        html.append("<div><strong>Sistema de Notificaciones</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Recordatorios personalizados de citas programadas, resultados de laboratorio y seguimiento de tratamientos.</span></div>");
         html.append("</div>");
         html.append("<div class=\"feature-item\">");
         html.append("<div class=\"feature-icon\">4</div>");
-        html.append("<div><strong>Perfil personal</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Gestione su información personal y preferencias médicas.</span></div>");
+        html.append("<div><strong>Portal de Administración Personal</strong><br><span style=\"color: #6b7280; font-size: 14px;\">Gestión integral de información demográfica, preferencias de contacto y configuración de cuenta.</span></div>");
         html.append("</div>");
         html.append("</div>");
 
@@ -104,17 +107,17 @@ public class EmailService {
         html.append("<a href=\"#\" class=\"button\">ACCEDER A MI CUENTA</a>");
         html.append("</div>");
 
-        html.append("<p style=\"text-align: center; color: #6b7280; font-size: 14px; margin: 20px 0;\">Para cualquier consulta o asistencia técnica, nuestro equipo de soporte está disponible para ayudarle.</p>");
+        html.append("<p style=\"text-align: center; color: #6b7280; font-size: 14px; margin: 20px 0;\">Para consultas técnicas o asistencia personalizada, nuestro departamento de soporte se encuentra disponible en horario laboral.</p>");
 
         html.append("<div style=\"text-align: center; margin-top: 25px; padding: 20px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;\">");
-        html.append("<p style=\"margin: 0; color: #1f2937; font-weight: 600; font-size: 15px;\">Su salud y bienestar son nuestra máxima prioridad</p>");
-        html.append("<p style=\"margin: 5px 0 0 0; color: #6b7280; font-size: 14px;\">Equipo Profesional de MediCitas</p>");
+        html.append("<p style=\"margin: 0; color: #1f2937; font-weight: 600; font-size: 15px;\">Comprometidos con la excelencia en servicios de salud</p>");
+        html.append("<p style=\"margin: 5px 0 0 0; color: #6b7280; font-size: 14px;\">Dirección General - Sistema MediCitas</p>");
         html.append("</div>");
         html.append("</div>");
 
         html.append("<div class=\"footer\">");
-        html.append("<p style=\"margin: 0 0 8px 0; font-weight: 500;\">Este es un mensaje automático del sistema MediCitas</p>");
-        html.append("<p style=\"margin: 0; color: #9ca3af;\">Por favor, no responda a este correo electrónico. Para soporte técnico, utilice los canales oficiales de atención.</p>");
+        html.append("<p style=\"margin: 0 0 8px 0; font-weight: 500;\">Comunicación oficial del Sistema MediCitas</p>");
+        html.append("<p style=\"margin: 0; color: #9ca3af;\">Este es un mensaje generado automáticamente. Para asistencia técnica, comuníquese a través de nuestros canales oficiales de atención.</p>");
         html.append("<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;\">");
         html.append("<p style=\"margin: 0; font-size: 12px; color: #9ca3af;\">&copy; 2024 MediCitas. Todos los derechos reservados.<br>");
         html.append("Sistema de Gestión Médica Integral - Versión 2.0</p>");
