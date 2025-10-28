@@ -45,7 +45,7 @@ public class HorarioMedicoController {
         if (h == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(h);
     }
-
+    
     @PostMapping
     public ResponseEntity<?> create(@RequestBody HorarioMedico horario) {
         // Resolve medico reference if only id is provided in payload
@@ -85,6 +85,14 @@ public class HorarioMedicoController {
 
                 if (mid != null) {
                     com.example.citasmedicas_backend.citas.model.Medico m = medicoService.findById(mid);
+                    if (m == null) {
+                        // Si el médico no existe, intentar crearlo con el ID del usuario
+                        logger.warn("Médico con ID {} no encontrado. Intentando buscar por usuario...", mid);
+                        m = medicoService.findByUsuario_Id(mid);
+                        if (m == null) {
+                            logger.error("No se encontró médico para el ID {} ni como médico ni como usuario", mid);
+                        }
+                    }
                     horario.setMedico(m);
                 }
             }

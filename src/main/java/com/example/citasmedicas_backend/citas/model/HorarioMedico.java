@@ -33,7 +33,7 @@ HorarioMedico {
     @Column(name = "horario-inicio")
     private LocalTime horarioInicio;
 
-    @Column(name = "hoario-fin")
+    @Column(name = "horario-fin")
     private LocalTime horarioFin;
 
     @Column(name = "duracion")
