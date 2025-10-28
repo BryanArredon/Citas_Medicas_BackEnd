@@ -5,9 +5,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,11 +61,13 @@ public class MedicoController {
 
     // Obtener medico por usuario id
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Medico> findByUsuarioId(@PathVariable("usuarioId") Long usuarioId) {
-        Medico m = medicoService.findByUsuario_Id(usuarioId);
-        if (m == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(m);
+    public ResponseEntity<List<Medico>> getMedicosByUsuario(@PathVariable Long usuarioId) {
+    List<Medico> medicos = medicoService.getMedicosByUsuario(usuarioId);
+    if (medicos.isEmpty()) {
+        return ResponseEntity.noContent().build();
     }
+    return ResponseEntity.ok(medicos);
+}
 
     // Obtener medico por correo electrónico (query param)
     @GetMapping("/email")
@@ -87,5 +91,49 @@ public class MedicoController {
         Medico m = medicoService.findByUsuarioCorreo(correo);
         if (m == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(horarioMedicoService.findByMedicoId(m.getId()));
+    }
+
+    @GetMapping("/servicio/{servicioId}")
+    public ResponseEntity<List<Medico>> getMedicosByServicio(@PathVariable Long servicioId) {
+        List<Medico> medicos = medicoService.getMedicosByServicio(servicioId);
+        if (medicos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(medicos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Medico> getMedicoById(@PathVariable Long id) {
+        Medico medico = medicoService.getMedicoById(id);
+        if (medico == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(medico);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Medico> updateMedico(@PathVariable Long id, @RequestBody Medico medicoDetails) {
+        Medico existing = medicoService.getMedicoById(id);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Medico updated = medicoService.updateMedico(id, medicoDetails);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMedico(@PathVariable Long id) {
+        Medico existing = medicoService.getMedicoById(id);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        boolean deleted = medicoService.deleteMedico(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

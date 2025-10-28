@@ -14,6 +14,8 @@ import com.example.citasmedicas_backend.citas.model.HorarioMedico;
 import com.example.citasmedicas_backend.citas.model.Medico;
 import com.example.citasmedicas_backend.citas.repository.MedicoRepository;
 
+import java.util.Optional;
+
 @Service
 @Transactional
 public class MedicoService {
@@ -25,7 +27,7 @@ public class MedicoService {
 
     private final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MedicoService.class);
 
-    @Transactional(rollbackFor = Exception.class)
+    /*@Transactional(rollbackFor = Exception.class)
     public Medico createMedico(Medico medico) {
         logger.info("Iniciando creación de médico");
         
@@ -56,6 +58,10 @@ public class MedicoService {
             logger.error(error, e);
             throw new RuntimeException(error, e);
         }
+    }*/
+
+    public Medico createMedico(Medico medico) {
+        return medicoRepository.save(medico);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -111,4 +117,34 @@ public class MedicoService {
     public Medico findByUsuario_Id(Long usuarioId) {
         return medicoRepository.findByUsuario_IdUsuario(usuarioId);
     }
+
+    public Medico getMedicoById(Long id) {
+        Optional<Medico> medico = medicoRepository.findById(id);
+        return medico.orElse(null);
+    }
+
+    public List<Medico> getMedicosByServicio(Long servicioId) {
+        return medicoRepository.findByServicioId(servicioId);
+    }
+
+    public Medico updateMedico(Long id, Medico medicoDetails) {
+        return medicoRepository.findById(id).map(medico -> {
+            medico.setUsuario(medicoDetails.getUsuario());
+            medico.setServicio(medicoDetails.getServicio());
+            medico.setCedulaProfecional(medicoDetails.getCedulaProfecional());
+            return medicoRepository.save(medico);
+        }).orElse(null);
+    }
+
+    public boolean deleteMedico(Long id) {
+        if (medicoRepository.existsById(id)) {
+            medicoRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public List<Medico> getMedicosByUsuario(Long usuarioId) {
+    return medicoRepository.findByUsuarioId(usuarioId);
+}
 }

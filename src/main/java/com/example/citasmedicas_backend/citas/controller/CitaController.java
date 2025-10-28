@@ -1,6 +1,7 @@
 package com.example.citasmedicas_backend.citas.controller;
 
 import com.example.citasmedicas_backend.citas.dto.CitaProximaDTO;
+import com.example.citasmedicas_backend.citas.dto.CitaRequestDTO;
 import com.example.citasmedicas_backend.citas.model.Cita;
 import com.example.citasmedicas_backend.citas.repository.CitaRepository;
 import com.example.citasmedicas_backend.citas.service.CitaService;
@@ -32,8 +33,13 @@ public class CitaController {
     }
 
     @PostMapping
-    public Cita createCita(@RequestBody Cita cita) {
-        return citaService.createCita(cita);
+    public ResponseEntity<Cita> createCita(@RequestBody CitaRequestDTO citaRequest) {
+        try {
+            Cita nuevaCita = citaService.createCitaConAgenda(citaRequest);
+            return ResponseEntity.ok(nuevaCita);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")

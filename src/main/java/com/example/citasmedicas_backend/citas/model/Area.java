@@ -18,7 +18,7 @@ public class Area { // ← singular
     private String descripcion;
 
     @Column(name = "estatus")
-    private boolean estatus;
+    private boolean estatus = true;
 
     // Constructor vacío
     public Area() {}
@@ -56,7 +56,7 @@ public class Area { // ← singular
         this.descripcion = descripcion;
     }
 
-    public boolean getEstatus() {
+    public boolean isEstatus() {
         return estatus;
     }
 

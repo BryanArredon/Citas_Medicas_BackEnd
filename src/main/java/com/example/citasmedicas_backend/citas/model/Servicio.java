@@ -32,28 +32,30 @@ public class Servicio {
     @Column(name = "costo", precision = 10, scale = 2)
     private BigDecimal costo;
 
-    //Contructor vacio
-    public Servicio () {}
+    @Column(name = "duracion", nullable = false)
+    private Integer duracion; // Duración en minutos
 
-    //Constructo con parametros
+    // Constructor vacío
+    public Servicio() {}
 
-
+    // Constructor con parámetros actualizado
     public Servicio(
             Long id,
             String nombreServicio,
             Area area,
             String descripcionServicio,
-            BigDecimal costo
+            BigDecimal costo,
+            Integer duracion
     ) {
         this.id = id;
         this.nombreServicio = nombreServicio;
         this.area = area;
         this.descripcionServicio = descripcionServicio;
         this.costo = costo;
+        this.duracion = duracion;
     }
 
-    //Getters y setters
-
+    // Getters y setters
     public Long getId() {
         return id;
     }
@@ -92,5 +94,13 @@ public class Servicio {
 
     public void setCosto(BigDecimal costo) {
         this.costo = costo;
+    }
+
+    public Integer getDuracion() {
+        return duracion;
+    }
+
+    public void setDuracion(Integer duracion) {
+        this.duracion = duracion;
     }
 }

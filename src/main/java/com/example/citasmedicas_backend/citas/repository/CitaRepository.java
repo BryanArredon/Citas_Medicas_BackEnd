@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -26,4 +28,14 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "AND ag.fecha >= CURRENT_DATE " +
            "ORDER BY ag.fecha ASC, ag.horaInicio ASC")
     List<CitaProximaDTO> findCitasProximasByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT c FROM Cita c JOIN c.agenda a " +
+       "WHERE DATE(a.fecha) = :fecha AND c.estatus.id NOT IN (3, 6)")
+    List<Cita> findCitasByFecha(@Param("fecha") LocalDate fecha);
+
+    
+    @Query("SELECT c FROM Cita c JOIN c.agenda a " +
+       "WHERE c.medico.id = :idMedico AND DATE(a.fecha) = :fecha AND c.estatus.id NOT IN (3, 6)")
+    List<Cita> findCitasByMedicoAndFecha(@Param("idMedico") Long idMedico, @Param("fecha") LocalDate fecha);
+     
 }
