@@ -15,7 +15,7 @@ public class Expediente {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPacienteDetalle")
-    private Paciente paciente;
+    private PacienteDetalle pacientedetalle;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idHistorial")
@@ -39,12 +39,23 @@ public class Expediente {
     // Constructores
     public Expediente() {}
 
+    public Expediente(PacienteDetalle pacientedetalle, HistorialClinico historial, LocalDate fechaApertura,
+                      LocalDate fechaCierre, LocalDateTime fechaActualizacion,
+                      String nombreArchivo, String rutaArchivo) {
+        this.pacientedetalle = pacientedetalle;
+        this.historial = historial;
+        this.fechaApertura = fechaApertura;
+        this.fechaCierre = fechaCierre;
+        this.fechaActualizacion = fechaActualizacion;
+        this.nombreArchivo = nombreArchivo;
+        this.rutaArchivo = rutaArchivo;
+    }
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Paciente getPaciente() { return paciente; }
-    public void setPaciente(Paciente paciente) { this.paciente = paciente; }
+    public PacienteDetalle getPaciente() { return pacientedetalle; }
+    public void setPaciente(PacienteDetalle pacientedetalle) { this.pacientedetalle = pacientedetalle; }
 
     public HistorialClinico getHistorial() { return historial; }
     public void setHistorial(HistorialClinico historial) { this.historial = historial; }

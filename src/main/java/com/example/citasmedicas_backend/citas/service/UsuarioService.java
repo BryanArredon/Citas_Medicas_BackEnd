@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.citasmedicas_backend.citas.model.Medico;
-import com.example.citasmedicas_backend.citas.model.Paciente;
+import com.example.citasmedicas_backend.citas.model.PacienteDetalle;
 import com.example.citasmedicas_backend.citas.model.RolUser;
 import com.example.citasmedicas_backend.citas.model.Usuario;
 import com.example.citasmedicas_backend.citas.repository.PacienteRepository;
@@ -82,7 +82,7 @@ public class UsuarioService {
 			logger.info("Creando registro de paciente...");
 			// create paciente if not exists
 			if (!pacienteRepository.existsByUsuario_IdUsuario(saved.getIdUsuario())) {
-				Paciente p = new Paciente();
+				PacienteDetalle p = new PacienteDetalle();
 				p.setUsuario(saved);
 				pacienteRepository.save(p);
 				logger.info("✅ Paciente creado");

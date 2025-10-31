@@ -13,17 +13,29 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT new com.example.citasmedicas_backend.citas.dto.CitaProximaDTO(" +
            "c.id, ag.fecha, ag.horaInicio, ag.horaFin, " +
            "m.usuario.nombre, m.usuario.apellidoPaterno, m.usuario.apellidoMaterno, " +
-           "s.nombreServicio, s.area.nombreArea, e.estatus, c.motivo, c.fechaSolicitud) " +
+           "s.nombreServicio, s.area.nombreArea, 'Confirmada', c.motivo, c.fechaSolicitud) " +
            "FROM Cita c " +
            "JOIN c.paciente p " +
            "JOIN c.medico m " +
            "JOIN c.agenda ag " +
            "JOIN c.servicio s " +
            "JOIN s.area " +
-           "JOIN c.estatus e " +
            "WHERE p.usuario.idUsuario = :usuarioId " +
-           "AND e.id IN (1, 2, 4, 5) " + // Aprobada, En proceso, Pospuesta, Pendiente
            "AND ag.fecha >= CURRENT_DATE " +
            "ORDER BY ag.fecha ASC, ag.horaInicio ASC")
     List<CitaProximaDTO> findCitasProximasByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT new com.example.citasmedicas_backend.citas.dto.CitaProximaDTO(" +
+           "c.id, ag.fecha, ag.horaInicio, ag.horaFin, " +
+           "p.usuario.nombre, p.usuario.apellidoPaterno, p.usuario.apellidoMaterno, " +
+           "s.nombreServicio, s.area.nombreArea, 'Confirmada', c.motivo, c.fechaSolicitud) " +
+           "FROM Cita c " +
+           "JOIN c.paciente p " +
+           "JOIN c.medico m " +
+           "JOIN c.agenda ag " +
+           "JOIN c.servicio s " +
+           "JOIN s.area " +
+           "WHERE m.id = :medicoId " +
+           "ORDER BY c.fechaSolicitud DESC")
+    List<CitaProximaDTO> findCitasByMedicoId(@Param("medicoId") Long medicoId);
 }

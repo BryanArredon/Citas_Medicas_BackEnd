@@ -31,6 +31,15 @@ public class AgendaController {
 
     @GetMapping("/medico/{medicoId}")
     public List<Agenda> getAgendasByMedico(@PathVariable Long medicoId) {
-        return agendaService.getAgendasByMedico(medicoId);
+        System.out.println("🔍 Buscando agendas para médico ID: " + medicoId);
+        List<Agenda> agendas = agendaService.getAgendasByMedico(medicoId);
+        System.out.println("📊 Total de agendas encontradas: " + agendas.size());
+        agendas.forEach(a -> {
+            System.out.println("  - Agenda ID: " + a.getId() + 
+                             ", Fecha: " + a.getFecha() + 
+                             ", Hora: " + a.getHoraInicio() + "-" + a.getHoraFin() +
+                             ", Médico ID: " + (a.getMedico() != null ? a.getMedico().getId() : "null"));
+        });
+        return agendas;
     }
 }

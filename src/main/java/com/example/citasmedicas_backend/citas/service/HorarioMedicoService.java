@@ -1,6 +1,7 @@
 package com.example.citasmedicas_backend.citas.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.citasmedicas_backend.citas.model.Agenda;
 import com.example.citasmedicas_backend.citas.model.EstadoMedico;
 import com.example.citasmedicas_backend.citas.model.HorarioMedico;
+import com.example.citasmedicas_backend.citas.repository.AgendaRepository;
 import com.example.citasmedicas_backend.citas.repository.HorarioMedicoRepository;
 
 @Service
@@ -20,6 +23,9 @@ public class HorarioMedicoService {
 
 	@Autowired
 	private HorarioMedicoRepository horarioMedicoRepository;
+	
+	@Autowired
+	private AgendaRepository agendaRepository;
 
 	// Create or update
 	@Transactional(propagation = Propagation.REQUIRED)
@@ -39,7 +45,27 @@ public class HorarioMedicoService {
 			}
 		} catch (Exception ignored) {}
 
-		return horarioMedicoRepository.save(horario);
+		// Guardar en horario_medico
+		HorarioMedico savedHorario = horarioMedicoRepository.save(horario);
+		
+		// También registrar en la tabla agenda
+		try {
+			Agenda agenda = new Agenda();
+			// Convertir LocalDate a LocalDateTime (fecha a medianoche)
+			LocalDateTime fechaDateTime = savedHorario.getFecha().atStartOfDay();
+			agenda.setFecha(fechaDateTime);
+			agenda.setHoraInicio(savedHorario.getHorarioInicio());
+			agenda.setHoraFin(savedHorario.getHorarioFin());
+			agenda.setMedico(savedHorario.getMedico());
+			
+			agendaRepository.save(agenda);
+			System.out.println("✅ Horario también registrado en tabla agenda: " + agenda.getId());
+		} catch (Exception e) {
+			System.err.println("⚠️ Error al registrar en tabla agenda: " + e.getMessage());
+			// No lanzar excepción para no afectar el guardado del horario principal
+		}
+
+		return savedHorario;
 	}
 
 	public List<HorarioMedico> findAll() {

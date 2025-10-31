@@ -20,6 +20,14 @@ public class AreasController {
     @GetMapping
     public List<Area> listAll(){return service.findAll();}
 
+    @GetMapping("/activas")
+    public List<Area> listActivas(){
+        List<Area> allAreas = service.findAll();
+        return allAreas.stream()
+                .filter(area -> area.getEstatus())
+                .toList();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Area> getById(@PathVariable Long id) {
         Area a = service.findById(id);

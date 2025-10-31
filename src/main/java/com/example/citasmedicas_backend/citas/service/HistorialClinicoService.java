@@ -26,7 +26,7 @@ public class HistorialClinicoService {
     }
 
     public List<HistorialClinico> getHistorialClinicoByPaciente(Long pacienteId) {
-        return historialClinicoRepository.findByPacienteId(pacienteId);
+        return historialClinicoRepository.findByPacientedetalleId(pacienteId);
     }
 
     public List<HistorialClinico> getHistorialClinicoByMedico(Long medicoId) {

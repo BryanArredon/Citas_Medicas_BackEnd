@@ -25,7 +25,7 @@ public class HistorialClinico {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPacienteDetalle")
-    private Paciente paciente;
+    private PacienteDetalle pacientedetalle;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idMedicoDetalle")
@@ -56,12 +56,26 @@ public class HistorialClinico {
     // Constructores
     public HistorialClinico() {}
 
+    public HistorialClinico(PacienteDetalle pacientedetalle, Medico medico, Cita cita, LocalDate fecha,
+                           String diagnostico, String tratamiento, String medicamentos,
+                           String notasAdicionales, LocalDateTime fechaActualizacion) {
+        this.pacientedetalle = pacientedetalle;
+        this.medico = medico;
+        this.cita = cita;
+        this.fecha = fecha;
+        this.diagnostico = diagnostico;
+        this.tratamiento = tratamiento;
+        this.medicamentos = medicamentos;
+        this.notasAdicionales = notasAdicionales;
+        this.fechaActualizacion = fechaActualizacion;
+    }
+
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Paciente getPaciente() { return paciente; }
-    public void setPaciente(Paciente paciente) { this.paciente = paciente; }
+    public PacienteDetalle getPaciente() { return pacientedetalle; }
+    public void setPaciente(PacienteDetalle pacientedetalle) { this.pacientedetalle = pacientedetalle; }
 
     public Medico getMedico() { return medico; }
     public void setMedico(Medico medico) { this.medico = medico; }

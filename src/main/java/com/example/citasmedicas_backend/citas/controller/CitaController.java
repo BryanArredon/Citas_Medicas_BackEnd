@@ -1,14 +1,16 @@
 package com.example.citasmedicas_backend.citas.controller;
 
 import com.example.citasmedicas_backend.citas.dto.CitaProximaDTO;
-import com.example.citasmedicas_backend.citas.model.Cita;
+import com.example.citasmedicas_backend.citas.model.*;
 import com.example.citasmedicas_backend.citas.repository.CitaRepository;
 import com.example.citasmedicas_backend.citas.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -32,7 +34,55 @@ public class CitaController {
     }
 
     @PostMapping
-    public Cita createCita(@RequestBody Cita cita) {
+    public Cita createCita(@RequestBody Map<String, Object> citaRequest) {
+        System.out.println("📥 Datos recibidos del frontend: " + citaRequest);
+        
+        // Construir la entidad Cita desde el Map
+        Cita cita = new Cita();
+        
+        // Paciente (solo referencia por ID)
+        if (citaRequest.containsKey("pacienteId")) {
+            PacienteDetalle paciente = new PacienteDetalle();
+            paciente.setId(((Number) citaRequest.get("pacienteId")).longValue());
+            cita.setPaciente(paciente);
+        }
+        
+        // Médico (solo referencia por ID)
+        if (citaRequest.containsKey("medicoId")) {
+            Medico medico = new Medico();
+            medico.setId(((Number) citaRequest.get("medicoId")).longValue());
+            cita.setMedico(medico);
+        }
+        
+        // Servicio (solo referencia por ID)
+        if (citaRequest.containsKey("servicioId")) {
+            Servicio servicio = new Servicio();
+            servicio.setId(((Number) citaRequest.get("servicioId")).longValue());
+            cita.setServicio(servicio);
+        }
+        
+        // Agenda (opcional)
+        if (citaRequest.containsKey("agendaId") && citaRequest.get("agendaId") != null) {
+            Agenda agenda = new Agenda();
+            agenda.setId(((Number) citaRequest.get("agendaId")).longValue());
+            cita.setAgenda(agenda);
+        }
+        
+        // Fecha/hora
+        if (citaRequest.containsKey("fechaHora")) {
+            String fechaHoraStr = (String) citaRequest.get("fechaHora");
+            cita.setFechaSolicitud(LocalDateTime.parse(fechaHoraStr.substring(0, 19)));
+        }
+        
+        // Motivo
+        if (citaRequest.containsKey("motivo")) {
+            cita.setMotivo((String) citaRequest.get("motivo"));
+        }
+        
+        System.out.println("📋 Cita construida: Paciente=" + cita.getPaciente().getId() + 
+                          ", Médico=" + cita.getMedico().getId() + 
+                          ", Servicio=" + cita.getServicio().getId());
+        
         return citaService.createCita(cita);
     }
 
@@ -87,6 +137,25 @@ public class CitaController {
             
             return ResponseEntity.ok(citasLimitadas);
         } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/medico/{medicoId}")
+    public ResponseEntity<List<CitaProximaDTO>> getCitasByMedico(@PathVariable Long medicoId) {
+        try {
+            System.out.println("🔍 Buscando citas para médico ID: " + medicoId);
+            List<CitaProximaDTO> citas = citaRepository.findCitasByMedicoId(medicoId);
+            System.out.println("📊 Total de citas encontradas: " + citas.size());
+            
+            if (citas.isEmpty()) {
+                return ResponseEntity.ok(List.of()); // Retornar lista vacía en lugar de 204
+            }
+            
+            return ResponseEntity.ok(citas);
+        } catch (Exception e) {
+            System.err.println("❌ Error al buscar citas del médico: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }

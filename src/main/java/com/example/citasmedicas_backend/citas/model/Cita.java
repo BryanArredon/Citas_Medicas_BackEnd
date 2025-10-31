@@ -14,7 +14,7 @@ public class Cita {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idPacienteDetalle")
-    private Paciente paciente;
+    private PacienteDetalle paciente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idMedicoDetalle")
@@ -27,10 +27,6 @@ public class Cita {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idAgenda")
     private Agenda agenda;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idEstatus")
-    private Estatus estatus;
 
     @Column(name = "fechaSolicitud", nullable = false)
     private LocalDateTime fechaSolicitud;
@@ -45,8 +41,8 @@ public class Cita {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Paciente getPaciente() { return paciente; }
-    public void setPaciente(Paciente paciente) { this.paciente = paciente; }
+    public PacienteDetalle getPaciente() { return paciente; }
+    public void setPaciente(PacienteDetalle paciente) { this.paciente = paciente; }
 
     public Medico getMedico() { return medico; }
     public void setMedico(Medico medico) { this.medico = medico; }
@@ -56,9 +52,6 @@ public class Cita {
 
     public Agenda getAgenda() { return agenda; }
     public void setAgenda(Agenda agenda) { this.agenda = agenda; }
-
-    public Estatus getEstatus() { return estatus; }
-    public void setEstatus(Estatus estatus) { this.estatus = estatus; }
 
     public LocalDateTime getFechaSolicitud() { return fechaSolicitud; }
     public void setFechaSolicitud(LocalDateTime fechaSolicitud) { this.fechaSolicitud = fechaSolicitud; }

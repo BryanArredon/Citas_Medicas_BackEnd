@@ -9,7 +9,7 @@ import com.example.citasmedicas_backend.citas.model.HistorialClinico;
 
 @Repository
 public interface HistorialClinicoRepository extends JpaRepository<HistorialClinico, Long> {
-    List<HistorialClinico> findByPacienteId(Long pacienteId);
+    List<HistorialClinico> findByPacientedetalleId(Long pacientedetalleId);
     List<HistorialClinico> findByMedicoId(Long medicoId);
     List<HistorialClinico> findByCitaId(Long citaId);
 }

@@ -63,4 +63,14 @@ public class ServiciosController {
 		service.deleteById(id);
 		return ResponseEntity.noContent().build();
 	}
+
+	// Obtener servicios por área
+	@GetMapping("/area/{areaId}")
+	public ResponseEntity<List<Servicio>> getServiciosByArea(@PathVariable Long areaId) {
+		List<Servicio> servicios = service.findAll();
+		List<Servicio> serviciosPorArea = servicios.stream()
+			.filter(s -> s.getArea() != null && s.getArea().getId().equals(areaId))
+			.toList();
+		return ResponseEntity.ok(serviciosPorArea);
+	}
 }

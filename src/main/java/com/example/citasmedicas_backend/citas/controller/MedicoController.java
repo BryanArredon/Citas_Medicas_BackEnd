@@ -88,4 +88,14 @@ public class MedicoController {
         if (m == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(horarioMedicoService.findByMedicoId(m.getId()));
     }
+
+    // Obtener médicos por servicio
+    @GetMapping("/servicio/{servicioId}")
+    public ResponseEntity<List<Medico>> getMedicosByServicio(@PathVariable Long servicioId) {
+        List<Medico> medicos = medicoService.getAllMedicos();
+        List<Medico> medicosPorServicio = medicos.stream()
+            .filter(m -> m.getServicio() != null && m.getServicio().getId().equals(servicioId))
+            .toList();
+        return ResponseEntity.ok(medicosPorServicio);
+    }
 }
