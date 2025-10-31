@@ -1,8 +1,18 @@
 package com.example.citasmedicas_backend.citas.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "cita")
@@ -40,6 +50,25 @@ public class Cita {
     @Column(name = "motivo", length = 255)
     private String motivo;
 
+    // Campos relacionados con el pago
+    @Column(name = "montoPagado")
+    private java.math.BigDecimal montoPagado;
+
+    @Column(name = "idPago")
+    private Long idPago;
+
+    @Column(name = "estadoPago", length = 50)
+    private String estadoPago; // PENDIENTE, APROBADO, RECHAZADO, REEMBOLSADO
+
+    @Column(name = "numeroReferenciaPago", length = 100)
+    private String numeroReferenciaPago;
+
+    @Column(name = "fechaPago")
+    private LocalDateTime fechaPago;
+
+    @Column(name = "metodoPago", length = 50)
+    private String metodoPago;
+
     // Constructores
     public Cita() {}
 
@@ -67,5 +96,24 @@ public class Cita {
 
     public Estatus getEstatus() { return estatus; }
     public void setEstatus(Estatus estatus) { this.estatus = estatus; }
+
+    public java.math.BigDecimal getMontoPagado() { return montoPagado; }
+    public void setMontoPagado(java.math.BigDecimal montoPagado) { this.montoPagado = montoPagado; }
+
+    public Long getIdPago() { return idPago; }
+    public void setIdPago(Long idPago) { this.idPago = idPago; }
+
+    public String getEstadoPago() { return estadoPago; }
+    public void setEstadoPago(String estadoPago) { this.estadoPago = estadoPago; }
+
+    public String getNumeroReferenciaPago() { return numeroReferenciaPago; }
+    public void setNumeroReferenciaPago(String numeroReferenciaPago) { this.numeroReferenciaPago = numeroReferenciaPago; }
+
+    public LocalDateTime getFechaPago() { return fechaPago; }
+    public void setFechaPago(LocalDateTime fechaPago) { this.fechaPago = fechaPago; }
+
+    public String getMetodoPago() { return metodoPago; }
+    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
 }
+
 

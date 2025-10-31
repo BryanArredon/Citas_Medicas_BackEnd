@@ -1,6 +1,7 @@
 package com.example.citasmedicas_backend.citas.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,25 @@ public class EmailService {
         helper.setTo(destinatario);
         helper.setSubject(asunto);
         helper.setText(contenidoHtml, true); // true indica que es HTML
+
+        mailSender.send(message);
+    }
+
+    /**
+     * Envía un correo electrónico con contenido HTML y un archivo adjunto PDF
+     */
+    public void enviarEmailConAdjunto(String destinatario, String asunto, String contenidoHtml, 
+                                      byte[] archivoPdf, String nombreArchivo) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(destinatario);
+        helper.setSubject(asunto);
+        helper.setText(contenidoHtml, true); // true indica que es HTML
+
+        // Agregar el archivo PDF como adjunto usando ByteArrayResource
+        ByteArrayResource pdfResource = new ByteArrayResource(archivoPdf);
+        helper.addAttachment(nombreArchivo, pdfResource, "application/pdf");
 
         mailSender.send(message);
     }

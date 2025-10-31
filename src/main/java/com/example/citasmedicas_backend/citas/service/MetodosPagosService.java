@@ -255,6 +255,114 @@ public class MetodosPagosService {
     }
 
     // ===============================
+    // PAGOS
+    // ===============================
+
+    /**
+     * Procesa un pago simulado
+     */
+    public PagoCompletoDto procesarPago(PagoCompletoDto pagoRequest) {
+        try {
+            log.info("🔄 Procesando pago - Monto: {}, Referencia: {}", 
+                pagoRequest.getMonto(), pagoRequest.getReferencia());
+            
+            Mono<PagoCompletoDto> mono = webClient.post()
+                    .uri("/api/pagos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .bodyValue(pagoRequest)
+                    .retrieve()
+                    .bodyToMono(PagoCompletoDto.class)
+                    .timeout(timeout);
+
+            PagoCompletoDto resultado = mono.block();
+            
+            if (resultado != null) {
+                log.info("✅ Pago procesado exitosamente - ID: {}, Estado: {}", 
+                    resultado.getId(), 
+                    resultado.getEstadoPago() != null ? resultado.getEstadoPago().getNombre() : "N/A");
+            } else {
+                log.warn("⚠️ El microservicio devolvió null");
+            }
+            
+            return resultado;
+            
+        } catch (Exception ex) {
+            log.error("❌ Error procesando pago: {}", ex.toString());
+            throw new RuntimeException("Error al procesar el pago: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Procesa un reembolso
+     */
+    public PagoCompletoDto procesarReembolso(Long idPago, String motivo) {
+        try {
+            log.info("🔄 Procesando reembolso para pago ID: {} - Motivo: {}", idPago, motivo);
+            
+            // Primero obtener el pago original
+            PagoCompletoDto pagoOriginal = obtenerPagoPorId(idPago);
+            if (pagoOriginal == null) {
+                log.error("❌ No se encontró el pago con ID: {}", idPago);
+                throw new RuntimeException("Pago no encontrado");
+            }
+
+            // Cambiar el estado a REEMBOLSADO
+            EstadoPagoDto estadoReembolsado = new EstadoPagoDto();
+            estadoReembolsado.setId(4L); // ID del estado REEMBOLSADO
+            estadoReembolsado.setNombre("REEMBOLSADO");
+            pagoOriginal.setEstadoPago(estadoReembolsado);
+            pagoOriginal.setDescripcion("REEMBOLSO: " + motivo);
+            
+            // Actualizar el pago
+            Mono<PagoCompletoDto> mono = webClient.put()
+                    .uri("/api/pagos/{id}", idPago)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .bodyValue(pagoOriginal)
+                    .retrieve()
+                    .bodyToMono(PagoCompletoDto.class)
+                    .timeout(timeout);
+
+            PagoCompletoDto resultado = mono.block();
+            
+            if (resultado != null) {
+                log.info("✅ Reembolso procesado exitosamente para pago ID: {}", idPago);
+            }
+            
+            return resultado;
+            
+        } catch (Exception ex) {
+            log.error("❌ Error procesando reembolso: {}", ex.toString());
+            throw new RuntimeException("Error al procesar el reembolso: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Obtiene todos los pagos
+     */
+    public List<PagoCompletoDto> obtenerTodosPagos() {
+        try {
+            log.info("Obteniendo todos los pagos del microservicio");
+            
+            Mono<List<PagoCompletoDto>> mono = webClient.get()
+                    .uri("/api/pagos")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<PagoCompletoDto>>() {})
+                    .timeout(timeout);
+
+            List<PagoCompletoDto> pagos = mono.block();
+            log.info("Obtenidos {} pagos del microservicio", pagos != null ? pagos.size() : 0);
+            return pagos;
+            
+        } catch (Exception ex) {
+            log.error("Error obteniendo pagos del microservicio: {}", ex.toString());
+            return List.of();
+        }
+    }
+
+    // ===============================
     // MÉTODO DE VERIFICACIÓN
     // ===============================
 

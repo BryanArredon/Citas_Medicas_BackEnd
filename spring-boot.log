@@ -1,0 +1,916 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.example:citasmedicas-backend >------------------
+[INFO] Building citasmedicas-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.6:run (default-cli) > test-compile @ citasmedicas-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ citasmedicas-backend ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ citasmedicas-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 69 source files with javac [debug parameters release 17] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ citasmedicas-backend ---
+[INFO] skip non existing resourceDirectory /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ citasmedicas-backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] 
+[INFO] <<< spring-boot:3.5.6:run (default-cli) < test-compile @ citasmedicas-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.6:run (default-cli) @ citasmedicas-backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:44:47 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:44:47 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:44:47 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:44:47 - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-10-31 10:44:47 - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-10-31 10:44:50 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:44:50 - Finished Spring Data repository scanning in 391 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:44:51 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:44:51 - Starting service [Tomcat]
+2025-10-31 10:44:51 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:44:51 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:44:51 - Root WebApplicationContext: initialization completed in 4054 ms
+2025-10-31 10:44:52 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:44:52 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:44:52 - HHH000412: Hibernate ORM core version 6.6.29.Final
+2025-10-31 10:44:52 - HHH000026: Second-level cache disabled
+2025-10-31 10:44:53 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:44:53 - HikariPool-1 - Starting...
+2025-10-31 10:44:53 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4d3d8251
+2025-10-31 10:44:53 - HikariPool-1 - Start completed.
+2025-10-31 10:44:53 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:44:53 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:44:53 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:44:55 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:44:56 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:44:56 - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-10-31 10:44:58 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:44:59 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:44:59 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:44:59 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:45:00 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:45:00 - 
+
+Using generated security password: b945b9a7-164f-46a3-9b78-ad51232a7a83
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:45:00 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:45:00 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:45:00 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:45:00 - LiveReload server is running on port 35729
+2025-10-31 10:45:00 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:45:00 - Started CitasmedicasBackendApplication in 13.997 seconds (process running for 15.176)
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:46:48 - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2025-10-31 10:46:48 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:46:49 - Graceful shutdown complete
+2025-10-31 10:46:49 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:46:49 - HikariPool-1 - Shutdown initiated...
+2025-10-31 10:46:49 - HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:46:50 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:46:50 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:46:50 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:46:52 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:46:52 - Finished Spring Data repository scanning in 258 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:46:52 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:46:52 - Starting service [Tomcat]
+2025-10-31 10:46:52 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:46:52 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:46:52 - Root WebApplicationContext: initialization completed in 2641 ms
+2025-10-31 10:46:53 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:46:53 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:46:53 - HHH000026: Second-level cache disabled
+2025-10-31 10:46:53 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:46:53 - HikariPool-2 - Starting...
+2025-10-31 10:46:53 - HikariPool-2 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6f6a9c67
+2025-10-31 10:46:53 - HikariPool-2 - Start completed.
+2025-10-31 10:46:53 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:46:53 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:46:53 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:46:54 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:46:54 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:46:55 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:46:55 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:46:55 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:46:55 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:46:55 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:46:56 - 
+
+Using generated security password: 2dcbf190-4c5a-484b-9357-e22de7fd4a61
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:46:56 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:46:56 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:46:56 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:46:56 - LiveReload server is running on port 35729
+2025-10-31 10:46:56 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:46:56 - Started CitasmedicasBackendApplication in 6.744 seconds (process running for 130.955)
+2025-10-31 10:46:56 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:47:13 - Restarting due to 79 class path changes (0 additions, 78 deletions, 1 modification)
+2025-10-31 10:47:14 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:47:14 - Graceful shutdown complete
+2025-10-31 10:47:14 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:14 - HikariPool-2 - Shutdown initiated...
+2025-10-31 10:47:14 - HikariPool-2 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:47:15 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:47:15 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:47:15 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:47:16 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:47:16 - Finished Spring Data repository scanning in 16 ms. Found 0 JPA repository interfaces.
+2025-10-31 10:47:17 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:47:17 - Starting service [Tomcat]
+2025-10-31 10:47:17 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:47:17 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:47:18 - Root WebApplicationContext: initialization completed in 2347 ms
+2025-10-31 10:47:18 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:47:19 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:47:19 - HHH000026: Second-level cache disabled
+2025-10-31 10:47:19 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:47:19 - HikariPool-3 - Starting...
+2025-10-31 10:47:19 - HikariPool-3 - Added connection com.mysql.cj.jdbc.ConnectionImpl@240a83ce
+2025-10-31 10:47:19 - HikariPool-3 - Start completed.
+2025-10-31 10:47:19 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:47:19 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:47:19 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-3)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:47:19 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:47:19 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:19 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:47:19 - 2 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:47:19 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:47:19 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:47:19 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:47:20 - 
+
+Using generated security password: b3ecf6d9-1fcc-40f9-a32f-92ec3f040578
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:47:20 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:47:20 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:47:20 - LiveReload server is running on port 35729
+2025-10-31 10:47:20 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:47:20 - Started CitasmedicasBackendApplication in 5.414 seconds (process running for 154.84)
+2025-10-31 10:47:20 - Condition evaluation delta:
+
+
+==========================
+CONDITION EVALUATION DELTA
+==========================
+
+
+Positive matches:
+-----------------
+
+   ManagementWebSecurityAutoConfiguration matched:
+      - found 'session' scope (OnWebApplicationCondition)
+      - AllNestedConditions 2 matched 0 did not; NestedCondition on DefaultWebSecurityCondition.Beans @ConditionalOnMissingBean (types: org.springframework.security.web.SecurityFilterChain; SearchStrategy: all) did not find any beans; NestedCondition on DefaultWebSecurityCondition.Classes @ConditionalOnClass found required classes 'org.springframework.security.web.SecurityFilterChain', 'org.springframework.security.config.annotation.web.builders.HttpSecurity' (DefaultWebSecurityCondition)
+
+   SpringBootWebSecurityConfiguration.WebSecurityEnablerConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.config.annotation.web.configuration.EnableWebSecurity' (OnClassCondition)
+      - @ConditionalOnMissingBean (names: springSecurityFilterChain; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+
+Negative matches:
+-----------------
+
+    None
+
+
+Exclusions:
+-----------
+
+    None
+
+
+Unconditional classes:
+----------------------
+
+    None
+
+
+
+2025-10-31 10:47:25 - Restarting due to 21 class path changes (21 additions, 0 deletions, 0 modifications)
+2025-10-31 10:47:25 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:47:25 - Graceful shutdown complete
+2025-10-31 10:47:25 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:25 - HikariPool-3 - Shutdown initiated...
+2025-10-31 10:47:25 - HikariPool-3 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:47:26 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:47:26 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:47:26 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:47:27 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:47:27 - Finished Spring Data repository scanning in 152 ms. Found 8 JPA repository interfaces.
+2025-10-31 10:47:28 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:47:28 - Starting service [Tomcat]
+2025-10-31 10:47:28 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:47:28 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:47:28 - Root WebApplicationContext: initialization completed in 2277 ms
+2025-10-31 10:47:28 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:47:28 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:47:28 - HHH000026: Second-level cache disabled
+2025-10-31 10:47:28 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:47:28 - HikariPool-4 - Starting...
+2025-10-31 10:47:28 - HikariPool-4 - Added connection com.mysql.cj.jdbc.ConnectionImpl@17ec9899
+2025-10-31 10:47:28 - HikariPool-4 - Start completed.
+2025-10-31 10:47:28 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:47:28 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:47:28 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-4)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:47:29 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:47:30 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:30 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:47:30 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'citaController': Unsatisfied dependency expressed through field 'citaService': Error creating bean with name 'citaService': Unsatisfied dependency expressed through field 'comprobanteService': No qualifying bean of type 'com.example.citasmedicas_backend.citas.service.ComprobanteService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}
+2025-10-31 10:47:30 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:30 - HikariPool-4 - Shutdown initiated...
+2025-10-31 10:47:30 - HikariPool-4 - Shutdown completed.
+2025-10-31 10:47:30 - Stopping service [Tomcat]
+2025-10-31 10:47:30 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-10-31 10:47:30 - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field comprobanteService in com.example.citasmedicas_backend.citas.service.CitaService required a bean of type 'com.example.citasmedicas_backend.citas.service.ComprobanteService' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'com.example.citasmedicas_backend.citas.service.ComprobanteService' in your configuration.
+
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:47:32 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:47:32 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:47:32 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:47:32 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:47:32 - Finished Spring Data repository scanning in 32 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:47:33 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:47:33 - Starting service [Tomcat]
+2025-10-31 10:47:33 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:47:33 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:47:33 - Root WebApplicationContext: initialization completed in 897 ms
+2025-10-31 10:47:33 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:47:33 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:47:33 - HHH000026: Second-level cache disabled
+2025-10-31 10:47:33 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:47:33 - HikariPool-5 - Starting...
+2025-10-31 10:47:33 - HikariPool-5 - Added connection com.mysql.cj.jdbc.ConnectionImpl@55db4a02
+2025-10-31 10:47:33 - HikariPool-5 - Start completed.
+2025-10-31 10:47:33 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:47:33 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:47:33 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-5)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:47:34 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:47:34 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:47:35 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:47:35 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:47:35 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:47:35 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:47:35 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:47:35 - 
+
+Using generated security password: 37d17551-a86e-49bb-9056-64e12544e412
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:47:35 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:47:35 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:47:35 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:47:35 - LiveReload server is running on port 35729
+2025-10-31 10:47:35 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:47:35 - Started CitasmedicasBackendApplication in 3.588 seconds (process running for 170.282)
+2025-10-31 10:47:35 - Condition evaluation delta:
+
+
+==========================
+CONDITION EVALUATION DELTA
+==========================
+
+
+Positive matches:
+-----------------
+
+    None
+
+
+Negative matches:
+-----------------
+
+   ManagementWebSecurityAutoConfiguration:
+      Did not match:
+         - AllNestedConditions 1 matched 1 did not; NestedCondition on DefaultWebSecurityCondition.Beans @ConditionalOnMissingBean (types: org.springframework.security.web.SecurityFilterChain; SearchStrategy: all) found beans of type 'org.springframework.security.web.SecurityFilterChain' filterChain; NestedCondition on DefaultWebSecurityCondition.Classes @ConditionalOnClass found required classes 'org.springframework.security.web.SecurityFilterChain', 'org.springframework.security.config.annotation.web.builders.HttpSecurity' (DefaultWebSecurityCondition)
+      Matched:
+         - found 'session' scope (OnWebApplicationCondition)
+
+   SpringBootWebSecurityConfiguration.WebSecurityEnablerConfiguration:
+      Did not match:
+         - @ConditionalOnMissingBean (names: springSecurityFilterChain; SearchStrategy: all) found beans named springSecurityFilterChain (OnBeanCondition)
+      Matched:
+         - @ConditionalOnClass found required class 'org.springframework.security.config.annotation.web.configuration.EnableWebSecurity' (OnClassCondition)
+
+
+Exclusions:
+-----------
+
+    None
+
+
+Unconditional classes:
+----------------------
+
+    None
+
+
+
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:48:13 - Restarting due to 53 class path changes (0 additions, 53 deletions, 0 modifications)
+2025-10-31 10:48:13 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:48:14 - Graceful shutdown complete
+2025-10-31 10:48:14 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:48:14 - HikariPool-5 - Shutdown initiated...
+2025-10-31 10:48:14 - HikariPool-5 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:48:16 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:48:16 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:48:16 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:48:17 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:48:17 - Finished Spring Data repository scanning in 77 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:48:18 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:48:18 - Starting service [Tomcat]
+2025-10-31 10:48:18 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:48:18 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:48:18 - Root WebApplicationContext: initialization completed in 2094 ms
+2025-10-31 10:48:18 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:48:18 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:48:18 - HHH000026: Second-level cache disabled
+2025-10-31 10:48:18 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:48:18 - HikariPool-6 - Starting...
+2025-10-31 10:48:18 - HikariPool-6 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7644f17d
+2025-10-31 10:48:18 - HikariPool-6 - Start completed.
+2025-10-31 10:48:18 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:48:18 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:48:18 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-6)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:48:19 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:48:20 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:48:20 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:48:20 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:48:20 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:48:20 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:48:21 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:48:21 - 
+
+Using generated security password: 0694fe18-8906-4a33-99b5-a0b420f40082
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:48:21 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:48:21 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:48:21 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:48:21 - LiveReload server is running on port 35729
+2025-10-31 10:48:21 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:48:21 - Started CitasmedicasBackendApplication in 6.054 seconds (process running for 215.618)
+2025-10-31 10:48:21 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:52:30 - Restarting due to 53 class path changes (0 additions, 53 deletions, 0 modifications)
+2025-10-31 10:52:30 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:52:30 - Graceful shutdown complete
+2025-10-31 10:52:30 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:52:30 - HikariPool-6 - Shutdown initiated...
+2025-10-31 10:52:30 - HikariPool-6 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:52:33 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:52:33 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:52:33 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:52:34 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:52:34 - Finished Spring Data repository scanning in 66 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:52:34 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:52:34 - Starting service [Tomcat]
+2025-10-31 10:52:34 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:52:34 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:52:34 - Root WebApplicationContext: initialization completed in 1683 ms
+2025-10-31 10:52:35 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:52:35 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:52:35 - HHH000026: Second-level cache disabled
+2025-10-31 10:52:35 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:52:35 - HikariPool-7 - Starting...
+2025-10-31 10:52:35 - HikariPool-7 - Added connection com.mysql.cj.jdbc.ConnectionImpl@309c1a40
+2025-10-31 10:52:35 - HikariPool-7 - Start completed.
+2025-10-31 10:52:35 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:52:35 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:52:35 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-7)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:52:36 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:52:36 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:52:36 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:52:37 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:52:37 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:52:37 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:52:37 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:52:37 - 
+
+Using generated security password: b9c7ec62-f913-4455-94db-b367dbdb9888
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:52:37 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:52:37 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:52:37 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:52:37 - LiveReload server is running on port 35729
+2025-10-31 10:52:37 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:52:37 - Started CitasmedicasBackendApplication in 5.429 seconds (process running for 471.861)
+2025-10-31 10:52:37 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:56:02 - Restarting due to 53 class path changes (0 additions, 0 deletions, 53 modifications)
+2025-10-31 10:56:02 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:56:02 - Graceful shutdown complete
+2025-10-31 10:56:02 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:56:02 - HikariPool-7 - Shutdown initiated...
+2025-10-31 10:56:02 - HikariPool-7 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:56:03 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:56:03 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:56:03 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:56:04 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:56:04 - Finished Spring Data repository scanning in 74 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:56:04 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:56:04 - Starting service [Tomcat]
+2025-10-31 10:56:04 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:56:05 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:56:05 - Root WebApplicationContext: initialization completed in 1473 ms
+2025-10-31 10:56:05 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:56:05 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:56:05 - HHH000026: Second-level cache disabled
+2025-10-31 10:56:05 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:56:05 - HikariPool-8 - Starting...
+2025-10-31 10:56:05 - HikariPool-8 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7c2816d2
+2025-10-31 10:56:05 - HikariPool-8 - Start completed.
+2025-10-31 10:56:05 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:56:05 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:56:05 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-8)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:56:06 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:56:06 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:56:07 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:56:07 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:56:07 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:56:07 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:56:07 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:56:07 - 
+
+Using generated security password: 0b7e3b11-0bd0-451f-ba3d-8efba3a4bc96
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:56:07 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:56:07 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:56:07 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:56:07 - LiveReload server is running on port 35729
+2025-10-31 10:56:07 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:56:07 - Started CitasmedicasBackendApplication in 4.531 seconds (process running for 682.16)
+2025-10-31 10:56:07 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:56:41 - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2025-10-31 10:56:41 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:56:41 - Graceful shutdown complete
+2025-10-31 10:56:41 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:56:41 - HikariPool-8 - Shutdown initiated...
+2025-10-31 10:56:41 - HikariPool-8 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:56:42 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:56:42 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:56:42 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:56:43 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:56:43 - Finished Spring Data repository scanning in 64 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:56:44 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:56:44 - Starting service [Tomcat]
+2025-10-31 10:56:44 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:56:44 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:56:44 - Root WebApplicationContext: initialization completed in 2025 ms
+2025-10-31 10:56:45 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:56:45 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:56:45 - HHH000026: Second-level cache disabled
+2025-10-31 10:56:45 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:56:45 - HikariPool-9 - Starting...
+2025-10-31 10:56:45 - HikariPool-9 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2753f989
+2025-10-31 10:56:45 - HikariPool-9 - Start completed.
+2025-10-31 10:56:45 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:56:45 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:56:45 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-9)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:56:47 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:56:47 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:56:48 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:56:48 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:56:48 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:56:48 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:56:48 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:56:48 - 
+
+Using generated security password: 08431cf9-61f7-4d78-a5cf-0bac3123266d
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:56:48 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:56:48 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:56:49 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:56:49 - LiveReload server is running on port 35729
+2025-10-31 10:56:49 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:56:49 - Started CitasmedicasBackendApplication in 6.703 seconds (process running for 723.497)
+2025-10-31 10:56:49 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:57:00 - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2025-10-31 10:57:00 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:57:01 - Graceful shutdown complete
+2025-10-31 10:57:01 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:01 - HikariPool-9 - Shutdown initiated...
+2025-10-31 10:57:01 - HikariPool-9 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:57:03 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:57:03 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:57:03 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:57:06 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:57:06 - Finished Spring Data repository scanning in 459 ms. Found 12 JPA repository interfaces.
+2025-10-31 10:57:08 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:57:08 - Starting service [Tomcat]
+2025-10-31 10:57:08 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:57:09 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:57:09 - Root WebApplicationContext: initialization completed in 5148 ms
+2025-10-31 10:57:09 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:57:09 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:57:09 - HHH000026: Second-level cache disabled
+2025-10-31 10:57:10 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:57:10 - HikariPool-10 - Starting...
+2025-10-31 10:57:10 - HikariPool-10 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6e56eb04
+2025-10-31 10:57:10 - HikariPool-10 - Start completed.
+2025-10-31 10:57:10 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:57:10 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:57:10 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-10)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:57:12 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:57:13 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:14 - MetodosPagosService inicializado con URL: http://localhost:8050 y timeout: 5000ms
+2025-10-31 10:57:15 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:57:15 - 75 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:57:15 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:57:15 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:57:15 - 
+
+Using generated security password: 1497df98-613f-488d-bb6e-39d8c69d36f7
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:57:15 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:57:16 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:57:16 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:57:16 - LiveReload server is running on port 35729
+2025-10-31 10:57:16 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:57:16 - Started CitasmedicasBackendApplication in 13.693 seconds (process running for 750.683)
+2025-10-31 10:57:16 - Condition evaluation unchanged
+Hibernate: select count(*) from rol_user ru1_0
+2025-10-31 10:57:26 - Restarting due to 79 class path changes (0 additions, 78 deletions, 1 modification)
+2025-10-31 10:57:26 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:57:26 - Graceful shutdown complete
+2025-10-31 10:57:26 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:26 - HikariPool-10 - Shutdown initiated...
+2025-10-31 10:57:26 - HikariPool-10 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:57:27 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:57:27 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:57:27 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:57:28 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:57:28 - Finished Spring Data repository scanning in 13 ms. Found 0 JPA repository interfaces.
+2025-10-31 10:57:28 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:57:28 - Starting service [Tomcat]
+2025-10-31 10:57:28 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:57:29 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:57:29 - Root WebApplicationContext: initialization completed in 1706 ms
+2025-10-31 10:57:29 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:57:29 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:57:29 - HHH000026: Second-level cache disabled
+2025-10-31 10:57:29 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:57:29 - HikariPool-11 - Starting...
+2025-10-31 10:57:30 - HikariPool-11 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1cf1298e
+2025-10-31 10:57:30 - HikariPool-11 - Start completed.
+2025-10-31 10:57:30 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:57:30 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:57:30 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-11)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:57:30 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:57:30 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:30 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 10:57:30 - 2 mappings in 'requestMappingHandlerMapping'
+2025-10-31 10:57:30 - Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-10-31 10:57:30 - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-31 10:57:30 - ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-31 10:57:30 - 
+
+Using generated security password: 4324abed-b677-45c1-b32f-8fd4909c5a65
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-10-31 10:57:30 - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-10-31 10:57:31 - Exposing 1 endpoint beneath base path '/actuator'
+2025-10-31 10:57:31 - LiveReload server is running on port 35729
+2025-10-31 10:57:31 - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 10:57:31 - Started CitasmedicasBackendApplication in 4.038 seconds (process running for 765.536)
+2025-10-31 10:57:31 - Condition evaluation delta:
+
+
+==========================
+CONDITION EVALUATION DELTA
+==========================
+
+
+Positive matches:
+-----------------
+
+   ManagementWebSecurityAutoConfiguration matched:
+      - found 'session' scope (OnWebApplicationCondition)
+      - AllNestedConditions 2 matched 0 did not; NestedCondition on DefaultWebSecurityCondition.Beans @ConditionalOnMissingBean (types: org.springframework.security.web.SecurityFilterChain; SearchStrategy: all) did not find any beans; NestedCondition on DefaultWebSecurityCondition.Classes @ConditionalOnClass found required classes 'org.springframework.security.web.SecurityFilterChain', 'org.springframework.security.config.annotation.web.builders.HttpSecurity' (DefaultWebSecurityCondition)
+
+   SpringBootWebSecurityConfiguration.WebSecurityEnablerConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.security.config.annotation.web.configuration.EnableWebSecurity' (OnClassCondition)
+      - @ConditionalOnMissingBean (names: springSecurityFilterChain; SearchStrategy: all) did not find any beans (OnBeanCondition)
+
+
+Negative matches:
+-----------------
+
+    None
+
+
+Exclusions:
+-----------
+
+    None
+
+
+Unconditional classes:
+----------------------
+
+    None
+
+
+
+2025-10-31 10:57:35 - Restarting due to 21 class path changes (21 additions, 0 deletions, 0 modifications)
+2025-10-31 10:57:35 - Commencing graceful shutdown. Waiting for active requests to complete
+2025-10-31 10:57:35 - Graceful shutdown complete
+2025-10-31 10:57:35 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:35 - HikariPool-11 - Shutdown initiated...
+2025-10-31 10:57:35 - HikariPool-11 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-31 10:57:36 - Starting CitasmedicasBackendApplication using Java 23.0.2 with PID 64822 (/Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd/target/classes started by juanfranciscomanzanogarcia in /Users/juanfranciscomanzanogarcia/Documents/BryanEmilio/UTNG/CITAS MEDICAS/Citas_Medicas_BackEnd)
+2025-10-31 10:57:36 - Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-31 10:57:36 - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 10:57:37 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 10:57:37 - Finished Spring Data repository scanning in 65 ms. Found 6 JPA repository interfaces.
+2025-10-31 10:57:38 - Tomcat initialized with port 8080 (http)
+2025-10-31 10:57:38 - Starting service [Tomcat]
+2025-10-31 10:57:38 - Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-31 10:57:38 - Initializing Spring embedded WebApplicationContext
+2025-10-31 10:57:38 - Root WebApplicationContext: initialization completed in 1795 ms
+2025-10-31 10:57:38 - Filter 'webMvcObservationFilter' configured for use
+2025-10-31 10:57:38 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 10:57:38 - HHH000026: Second-level cache disabled
+2025-10-31 10:57:39 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 10:57:39 - HikariPool-12 - Starting...
+2025-10-31 10:57:39 - HikariPool-12 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2e3af7fc
+2025-10-31 10:57:39 - HikariPool-12 - Start completed.
+2025-10-31 10:57:39 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-31 10:57:39 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-31 10:57:39 - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-12)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 10:57:39 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 10:57:39 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:40 - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'citaController': Unsatisfied dependency expressed through field 'citaService': Error creating bean with name 'citaService': Unsatisfied dependency expressed through field 'metodosPagosService': No qualifying bean of type 'com.example.citasmedicas_backend.citas.service.MetodosPagosService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}
+2025-10-31 10:57:40 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 10:57:40 - HikariPool-12 - Shutdown initiated...
+2025-10-31 10:57:40 - HikariPool-12 - Shutdown completed.
+2025-10-31 10:57:40 - Stopping service [Tomcat]
+2025-10-31 10:57:40 - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-10-31 10:57:40 - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field metodosPagosService in com.example.citasmedicas_backend.citas.service.CitaService required a bean of type 'com.example.citasmedicas_backend.citas.service.MetodosPagosService' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'com.example.citasmedicas_backend.citas.service.MetodosPagosService' in your configuration.
+
