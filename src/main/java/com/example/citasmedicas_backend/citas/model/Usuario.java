@@ -1,10 +1,12 @@
 package com.example.citasmedicas_backend.citas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "usuario") // ← Nombre exacto de tu tabla en la BD
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Usuario {
 
     @Id

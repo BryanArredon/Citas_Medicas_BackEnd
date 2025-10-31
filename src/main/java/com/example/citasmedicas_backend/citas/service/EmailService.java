@@ -128,4 +128,113 @@ public class EmailService {
 
         return html.toString();
     }
+
+    /**
+     * Genera y envía un correo al paciente notificando el cambio de estado de su cita
+     */
+    public void notificarCambioCita(String emailPaciente, String nombrePaciente, String nombreMedico, 
+                                     String especialidad, String fechaCita, String accion, String nuevaFecha) throws MessagingException {
+        String asunto = "";
+        String estadoTexto = "";
+        String colorEstado = "";
+        String mensaje = "";
+
+        switch (accion.toLowerCase()) {
+            case "aceptada":
+                asunto = "✅ Tu cita ha sido confirmada - MediCitas";
+                estadoTexto = "CONFIRMADA";
+                colorEstado = "#10b981";
+                mensaje = "Nos complace informarte que tu cita médica ha sido confirmada.";
+                break;
+            case "cancelada":
+                asunto = "❌ Tu cita ha sido cancelada - MediCitas";
+                estadoTexto = "CANCELADA";
+                colorEstado = "#ef4444";
+                mensaje = "Lamentamos informarte que tu cita médica ha sido cancelada. Por favor, contacta con nosotros para reagendar.";
+                break;
+            case "pospuesta":
+                asunto = "🕐 Tu cita ha sido reprogramada - MediCitas";
+                estadoTexto = "REPROGRAMADA";
+                colorEstado = "#f59e0b";
+                mensaje = "Tu cita médica ha sido reprogramada para una nueva fecha.";
+                break;
+            default:
+                asunto = "📋 Actualización de tu cita - MediCitas";
+                estadoTexto = "ACTUALIZADA";
+                colorEstado = "#3b82f6";
+                mensaje = "Ha habido un cambio en el estado de tu cita médica.";
+        }
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html>");
+        html.append("<html lang=\"es\">");
+        html.append("<head>");
+        html.append("<meta charset=\"UTF-8\">");
+        html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+        html.append("<title>").append(asunto).append("</title>");
+        html.append("<style>");
+        html.append("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }");
+        html.append(".container { max-width: 600px; margin: 40px auto; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }");
+        html.append(".header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; }");
+        html.append(".content { padding: 30px; }");
+        html.append(".estado { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 20px 0; }");
+        html.append(".info-box { background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; }");
+        html.append(".info-row { margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }");
+        html.append(".info-label { font-weight: 600; color: #374151; display: inline-block; width: 140px; }");
+        html.append(".info-value { color: #6b7280; }");
+        html.append(".footer { background-color: #f8fafc; padding: 20px; text-align: center; color: #6b7280; font-size: 12px; }");
+        html.append("</style>");
+        html.append("</head>");
+        html.append("<body>");
+        html.append("<div class=\"container\">");
+        
+        html.append("<div class=\"header\">");
+        html.append("<h1 style=\"margin: 0; font-size: 28px;\">MediCitas</h1>");
+        html.append("<p style=\"margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;\">Sistema de Gestión de Citas Médicas</p>");
+        html.append("</div>");
+        
+        html.append("<div class=\"content\">");
+        html.append("<h2 style=\"color: #1f2937; margin-top: 0;\">Hola, ").append(nombrePaciente).append("</h2>");
+        html.append("<p style=\"color: #4b5563; font-size: 16px; line-height: 1.6;\">").append(mensaje).append("</p>");
+        
+        html.append("<div style=\"text-align: center;\">");
+        html.append("<span class=\"estado\" style=\"background-color: ").append(colorEstado).append("; color: white;\">").append(estadoTexto).append("</span>");
+        html.append("</div>");
+        
+        html.append("<div class=\"info-box\">");
+        html.append("<h3 style=\"color: #1f2937; margin-top: 0;\">📋 Detalles de la cita</h3>");
+        html.append("<div class=\"info-row\"><span class=\"info-label\">👨‍⚕️ Médico:</span><span class=\"info-value\">").append(nombreMedico).append("</span></div>");
+        html.append("<div class=\"info-row\"><span class=\"info-label\">🏥 Especialidad:</span><span class=\"info-value\">").append(especialidad).append("</span></div>");
+        
+        if (accion.equalsIgnoreCase("pospuesta") && nuevaFecha != null) {
+            html.append("<div class=\"info-row\"><span class=\"info-label\">📅 Fecha anterior:</span><span class=\"info-value\" style=\"text-decoration: line-through; color: #9ca3af;\">").append(fechaCita).append("</span></div>");
+            html.append("<div class=\"info-row\"><span class=\"info-label\">📅 Nueva fecha:</span><span class=\"info-value\" style=\"font-weight: 600; color: #10b981;\">").append(nuevaFecha).append("</span></div>");
+        } else {
+            html.append("<div class=\"info-row\"><span class=\"info-label\">📅 Fecha:</span><span class=\"info-value\">").append(fechaCita).append("</span></div>");
+        }
+        
+        html.append("</div>");
+        
+        if (accion.equalsIgnoreCase("cancelada")) {
+            html.append("<div style=\"background-color: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 20px 0;\">");
+            html.append("<p style=\"margin: 0; color: #991b1b; font-size: 14px;\"><strong>⚠️ Importante:</strong> Si deseas agendar una nueva cita, por favor accede a tu cuenta en MediCitas o contacta con nosotros.</p>");
+            html.append("</div>");
+        }
+        
+        html.append("<p style=\"color: #6b7280; font-size: 14px; margin-top: 25px;\">Si tienes alguna pregunta o necesitas hacer cambios, no dudes en contactarnos.</p>");
+        html.append("</div>");
+        
+        html.append("<div class=\"footer\">");
+        html.append("<p style=\"margin: 0 0 8px 0; font-weight: 500;\">Comunicación oficial del Sistema MediCitas</p>");
+        html.append("<p style=\"margin: 0; color: #9ca3af;\">Este es un mensaje generado automáticamente.</p>");
+        html.append("<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;\">");
+        html.append("<p style=\"margin: 0; font-size: 12px; color: #9ca3af;\">&copy; 2025 MediCitas. Todos los derechos reservados.</p>");
+        html.append("</div>");
+        
+        html.append("</div>");
+        html.append("</body>");
+        html.append("</html>");
+
+        enviarEmailHtml(emailPaciente, asunto, html.toString());
+    }
 }

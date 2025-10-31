@@ -1,10 +1,12 @@
 package com.example.citasmedicas_backend.citas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cita")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Cita {
 
     @Id
@@ -27,6 +29,10 @@ public class Cita {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idAgenda")
     private Agenda agenda;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idEstatus")
+    private Estatus estatus;
 
     @Column(name = "fechaSolicitud", nullable = false)
     private LocalDateTime fechaSolicitud;
@@ -58,5 +64,8 @@ public class Cita {
 
     public String getMotivo() { return motivo; }
     public void setMotivo(String motivo) { this.motivo = motivo; }
+
+    public Estatus getEstatus() { return estatus; }
+    public void setEstatus(Estatus estatus) { this.estatus = estatus; }
 }
 

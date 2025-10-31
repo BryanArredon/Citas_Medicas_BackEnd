@@ -3,6 +3,7 @@ package com.example.citasmedicas_backend.citas.model;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,6 +16,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "agenda")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Agenda {
 
     @Id

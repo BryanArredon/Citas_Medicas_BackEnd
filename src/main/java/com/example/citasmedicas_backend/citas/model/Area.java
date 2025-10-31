@@ -1,9 +1,11 @@
 package com.example.citasmedicas_backend.citas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "area") // ← coincide con tu tabla en la BD
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Area { // ← singular
 
     @Id

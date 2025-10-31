@@ -159,4 +159,52 @@ public class CitaController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+
+    @PutMapping("/{id}/aceptar")
+    public ResponseEntity<?> aceptarCita(@PathVariable Long id) {
+        try {
+            System.out.println("✅ Aceptando cita ID: " + id);
+            Cita cita = citaService.aceptarCita(id);
+            return ResponseEntity.ok(cita);
+        } catch (RuntimeException e) {
+            System.err.println("❌ Error al aceptar cita: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelarCita(@PathVariable Long id) {
+        try {
+            citaService.cancelarCita(id);
+            return ResponseEntity.ok(Map.of(
+                "message", "Cita cancelada y eliminada exitosamente",
+                "citaId", id
+            ));
+        } catch (RuntimeException e) {
+            System.err.println("❌ Error al cancelar cita: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/posponer")
+    public ResponseEntity<?> posponerCita(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+        try {
+            System.out.println("🕐 Posponiendo cita ID: " + id);
+            String nuevaFecha = (String) data.get("nuevaFecha");
+            if (nuevaFecha == null || nuevaFecha.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "La fecha nueva es requerida"));
+            }
+            
+            LocalDateTime fechaHora = LocalDateTime.parse(nuevaFecha.substring(0, 19));
+            Cita cita = citaService.posponerCita(id, fechaHora);
+            return ResponseEntity.ok(cita);
+        } catch (RuntimeException e) {
+            System.err.println("❌ Error al posponer cita: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

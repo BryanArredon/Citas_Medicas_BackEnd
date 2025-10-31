@@ -24,4 +24,14 @@ public class AgendaService {
     public List<Agenda> getAgendasByMedico(Long medicoId) {
         return agendaRepository.findByMedicoId(medicoId);
     }
+
+    public Agenda updateAgenda(Long id, Agenda agendaDetails) {
+        return agendaRepository.findById(id).map(agenda -> {
+            agenda.setFecha(agendaDetails.getFecha());
+            agenda.setHoraInicio(agendaDetails.getHoraInicio());
+            agenda.setHoraFin(agendaDetails.getHoraFin());
+            agenda.setMedico(agendaDetails.getMedico());
+            return agendaRepository.save(agenda);
+        }).orElse(null);
+    }
 }
