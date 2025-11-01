@@ -58,6 +58,11 @@ public class MedicoService {
         }
     }
 
+    public void deleteMedico(Long id) {
+    medicoRepository.deleteById(id);
+    logger.info("Médico y todos sus registros relacionados eliminados con CASCADE: {}", id);
+}
+
     @Transactional(rollbackFor = Exception.class)
     protected void createDefaultHorarios(Medico medico, LocalDate fecha) {
         logger.info("Creando horarios por defecto para médico id={}, fecha={}", medico.getId(), fecha);

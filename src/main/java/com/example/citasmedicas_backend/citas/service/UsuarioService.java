@@ -42,80 +42,59 @@ public class UsuarioService {
 	private MedicoService medicoService;
 
 	public Usuario save(Usuario usuario) {
-		logger.info("=== INICIANDO GUARDADO DE USUARIO ===");
-		logger.info("Usuario a guardar: nombre={}, email={}", usuario.getNombre(), usuario.getCorreoElectronico());
+    logger.info("=== INICIANDO GUARDADO DE USUARIO ===");
+    logger.info("Usuario a guardar: nombre={}, email={}", usuario.getNombre(), usuario.getCorreoElectronico());
 
-		// Resolve role: if client passed a RolUser with only nombreRol, fetch persisted RolUser
-		RolUser incoming = usuario.getRolUser();
-		logger.info("Rol entrante: {}", incoming);
-		if (incoming != null) {
-			if (incoming.getIdRol() != null) {
-				// try to load by id
-				RolUser r = rolUserRepository.findById(incoming.getIdRol()).orElse(null);
-				if (r != null) {
-					usuario.setRolUser(r);
-					logger.info("Rol resuelto por ID: {}", r.getNombreRol());
-				} else {
-					logger.error("❌ Rol no encontrado para ID: {}", incoming.getIdRol());
-				}
-			} else if (incoming.getNombreRol() != null) {
-				RolUser r = rolUserRepository.findByNombreRol(incoming.getNombreRol());
-				if (r != null) {
-					usuario.setRolUser(r);
-					logger.info("Rol resuelto por nombre: {}", r.getNombreRol());
-				} else {
-					logger.error("❌ Rol no encontrado para nombre: {}", incoming.getNombreRol());
-				}
-			}
-		} else {
-			logger.warn("⚠️ No se recibió rol para el usuario");
-		}
+    // ... código existente para resolver rol ...
 
-		// Save usuario first
-		logger.info("Guardando usuario en base de datos...");
-		Usuario saved = usuarioRepository.save(usuario);
-		logger.info("✅ Usuario guardado con ID: {}", saved.getIdUsuario());
+    // Save usuario first
+    logger.info("Guardando usuario en base de datos...");
+    Usuario saved = usuarioRepository.save(usuario);
+    logger.info("✅ Usuario guardado con ID: {}", saved.getIdUsuario());
 
-		// If user's role is PACIENTE, ensure a Paciente row exists
-		RolUser rol = saved.getRolUser();
-		if (rol != null && "PACIENTE".equalsIgnoreCase(rol.getNombreRol())) {
-			logger.info("Creando registro de paciente...");
-			// create paciente if not exists
-			if (!pacienteRepository.existsByUsuario_IdUsuario(saved.getIdUsuario())) {
-				PacienteDetalle p = new PacienteDetalle();
-				p.setUsuario(saved);
-				pacienteRepository.save(p);
-				logger.info("✅ Paciente creado");
-			} else {
-				logger.info("Paciente ya existe");
-			}
-		}
+    // If user's role is PACIENTE, ensure a Paciente row exists
+    RolUser rol = saved.getRolUser();
+    if (rol != null && "PACIENTE".equalsIgnoreCase(rol.getNombreRol())) {
+        logger.info("Creando registro de paciente...");
+        // create paciente if not exists
+        if (!pacienteRepository.existsByUsuario_IdUsuario(saved.getIdUsuario())) {
+            PacienteDetalle p = new PacienteDetalle();
+            p.setUsuario(saved);
+            pacienteRepository.save(p);
+            logger.info("✅ Paciente creado");
+        } else {
+            logger.info("Paciente ya existe");
+        }
+    }
 
-		// Si el usuario es médico, crear la entidad Medico y sus horarios
-		if (rol != null && (rol.getIdRol() == 2 || "MEDICO".equalsIgnoreCase(rol.getNombreRol()))) {
-			logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
+    // ❌ ELIMINAR O COMENTAR ESTE BLOQUE - La creación de médico se hará después
+    /*
+    // Si el usuario es médico, crear la entidad Medico y sus horarios
+    if (rol != null && (rol.getIdRol() == 2 || "MEDICO".equalsIgnoreCase(rol.getNombreRol()))) {
+        logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
 
-			// No asignar servicio ni área automáticamente: lo hará el administrador.
-			// Solo crear la entidad Medico mínima vinculada al Usuario para que exista el registro;
-			// el admin asignará servicio/área y otros datos posteriormente.
-			Medico medico = new Medico();
-			medico.setUsuario(saved);
-			// No setServicio: lo decidirá el administrador
-			medico.setCedulaProfecional("AUTO-" + saved.getIdUsuario());
+        // No asignar servicio ni área automáticamente: lo hará el administrador.
+        // Solo crear la entidad Medico mínima vinculada al Usuario para que exista el registro;
+        // el admin asignará servicio/área y otros datos posteriormente.
+        Medico medico = new Medico();
+        medico.setUsuario(saved);
+        // No setServicio: lo decidirá el administrador
+        medico.setCedulaProfecional("AUTO-" + saved.getIdUsuario());
 
-			try {
-				medico = medicoService.createMedico(medico); // Este método crea los horarios
-				logger.info("✅ Médico creado exitosamente (sin servicio/área): id={}", medico.getId());
-			} catch (Exception e) {
-				String error = "❌ Error creando el médico: " + e.getMessage();
-				logger.error(error, e);
-				throw new RuntimeException(error, e);
-			}
-		}
+        try {
+            medico = medicoService.createMedico(medico); // Este método crea los horarios
+            logger.info("✅ Médico creado exitosamente (sin servicio/área): id={}", medico.getId());
+        } catch (Exception e) {
+            String error = "❌ Error creando el médico: " + e.getMessage();
+            logger.error(error, e);
+            throw new RuntimeException(error, e);
+        }
+    }
+    */
 
-		logger.info("=== GUARDADO DE USUARIO COMPLETADO ===");
-		return saved;
-	}
+    logger.info("=== GUARDADO DE USUARIO COMPLETADO ===");
+    return saved;
+}
 
 	public List<Usuario> findAll() {
 		return usuarioRepository.findAll();
@@ -129,4 +108,4 @@ public class UsuarioService {
 	public void deleteById(Long id) {
 		usuarioRepository.deleteById(id);
 	}
-}
+}		

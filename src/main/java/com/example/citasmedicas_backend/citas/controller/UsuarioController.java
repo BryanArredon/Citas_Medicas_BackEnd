@@ -173,4 +173,3 @@ class UsuarioRegistroDTO {
     public Long getIdRol() { return idRol; }
     public void setIdRol(Long idRol) { this.idRol = idRol; }
 }
-
