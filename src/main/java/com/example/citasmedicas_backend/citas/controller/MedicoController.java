@@ -1,7 +1,9 @@
 package com.example.citasmedicas_backend.citas.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,13 @@ public class MedicoController {
                 return ResponseEntity.badRequest().body("Usuario no encontrado con ID: " + medicoDTO.getIdUsuario());
             }
 
+            // Verificar si ya existe un médico para este usuario
+            List<Medico> existing = medicoService.findAllByUsuario_Id(medicoDTO.getIdUsuario());
+            if (!existing.isEmpty()) {
+                System.out.println("Médico ya existe para usuario " + medicoDTO.getIdUsuario() + ", retornando existente");
+                return ResponseEntity.ok(existing.get(0));
+            }
+
             List<Medico> medicosCreados = new ArrayList<>();
             
             // Crear un registro por cada servicio
@@ -76,8 +85,25 @@ public class MedicoController {
                 medicosCreados.add(medicoCreado);
             }
 
+            // Si no se especificaron servicios, crear un médico sin servicio asignado
+            if (medicosCreados.isEmpty()) {
+                Medico medico = new Medico();
+                medico.setUsuario(usuario);
+                medico.setServicio(null); // Sin servicio asignado
+                medico.setCedulaProfecional(medicoDTO.getCedulaProfecional());
+
+                System.out.println("Creando médico sin servicio asignado");
+                Medico medicoCreado = medicoService.createMedico(medico);
+                medicosCreados.add(medicoCreado);
+            }
+
             System.out.println("✅ Médicos creados exitosamente: " + medicosCreados.size() + " registros");
-            return ResponseEntity.ok(medicosCreados);
+            // Si solo se creó uno, devolver el objeto individual, sino la lista
+            if (medicosCreados.size() == 1) {
+                return ResponseEntity.ok(medicosCreados.get(0));
+            } else {
+                return ResponseEntity.ok(medicosCreados);
+            }
 
         } catch (Exception e) {
             System.err.println("❌ Error creando médico: " + e.getMessage());
@@ -149,34 +175,101 @@ public ResponseEntity<?> updateMedicoWithServices(
             return ResponseEntity.badRequest().body("Usuario no encontrado con ID: " + usuarioId);
         }
 
-        // 1. Eliminar todos los registros existentes de este médico
+        // 1. Obtener registros existentes de este médico
         List<Medico> medicosExistentes = medicoService.getAllMedicos().stream()
             .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario().equals(usuarioId))
             .collect(Collectors.toList());
-            
+        
+        System.out.println("📋 Registros existentes: " + medicosExistentes.size());
+        
+        // Crear listas de IDs de servicios
+        List<Long> serviciosExistentesIds = medicosExistentes.stream()
+            .filter(m -> m.getServicio() != null)
+            .map(m -> m.getServicio().getId())
+            .collect(Collectors.toList());
+        
+        List<Long> nuevosServiciosIds = medicoDTO.getServiciosIds();
+        
+        // 2. Identificar servicios a eliminar (existentes pero no en la nueva lista)
+        List<Long> serviciosAEliminar = serviciosExistentesIds.stream()
+            .filter(id -> !nuevosServiciosIds.contains(id))
+            .collect(Collectors.toList());
+        
+        // 3. Identificar servicios a mantener (que siguen en la nueva lista)
+        List<Long> serviciosAMantener = serviciosExistentesIds.stream()
+            .filter(id -> nuevosServiciosIds.contains(id))
+            .collect(Collectors.toList());
+        
+        // 4. Identificar servicios a agregar (nuevos que no existen)
+        List<Long> serviciosAAgregar = nuevosServiciosIds.stream()
+            .filter(id -> !serviciosExistentesIds.contains(id))
+            .collect(Collectors.toList());
+        
+        // 5. Eliminar registros de servicios que ya no están seleccionados
+        // PERO primero verificar si tienen horarios/citas asociadas
+        List<String> serviciosConCitas = new ArrayList<>();
+        
         for (Medico medico : medicosExistentes) {
-            medicoService.deleteMedico(medico.getId());
+            if (medico.getServicio() != null && serviciosAEliminar.contains(medico.getServicio().getId())) {
+                // Verificar si este registro tiene horarios asociados
+                List<HorarioMedico> horarios = horarioMedicoService.findByMedicoId(medico.getId());
+                
+                if (!horarios.isEmpty()) {
+                    // Si tiene horarios, no puede eliminarse porque puede tener citas o agendas asociadas
+                    serviciosConCitas.add(medico.getServicio().getNombreServicio());
+                    System.out.println("⚠️ No se puede eliminar servicio con horarios: " + medico.getServicio().getNombreServicio());
+                } else {
+                    System.out.println("🗑️ Eliminando servicio: " + medico.getServicio().getNombreServicio());
+                    medicoService.deleteMedico(medico.getId());
+                }
+            }
         }
-
-        // 2. Crear nuevos registros con los servicios actualizados
-        List<Medico> medicosActualizados = new ArrayList<>();
-        for (Long servicioId : medicoDTO.getServiciosIds()) {
+        
+        // Si hay servicios con horarios/citas, retornar error
+        if (!serviciosConCitas.isEmpty()) {
+            String mensaje = "No se pueden eliminar los siguientes servicios porque tienen horarios o citas agendadas: " + 
+                           String.join(", ", serviciosConCitas) + 
+                           ". Por favor, elimine primero todos los horarios y citas asociadas a estos servicios.";
+            System.err.println("❌ " + mensaje);
+            return ResponseEntity.status(400).body(mensaje);
+        }
+        
+        // 6. Actualizar cédula SOLO en los registros que se mantienen
+        for (Medico medico : medicosExistentes) {
+            if (medico.getServicio() != null && serviciosAMantener.contains(medico.getServicio().getId())) {
+                medico.setCedulaProfecional(medicoDTO.getCedulaProfecional());
+                medicoService.createMedico(medico);
+                System.out.println("✏️ Actualizando cédula del servicio: " + medico.getServicio().getNombreServicio());
+            }
+        }
+        
+        // 7. Crear registros para servicios nuevos
+        for (Long servicioId : serviciosAAgregar) {
             Servicio servicio = servicioRepository.findById(servicioId).orElse(null);
             if (servicio == null) {
                 System.out.println("⚠️ Servicio no encontrado: " + servicioId);
                 continue;
             }
 
-            Medico medico = new Medico();
-            medico.setUsuario(usuario);
-            medico.setServicio(servicio);
-            medico.setCedulaProfecional(medicoDTO.getCedulaProfecional());
+            Medico nuevoMedico = new Medico();
+            nuevoMedico.setUsuario(usuario);
+            nuevoMedico.setServicio(servicio);
+            nuevoMedico.setCedulaProfecional(medicoDTO.getCedulaProfecional());
 
-            Medico medicoActualizado = medicoService.createMedico(medico);
-            medicosActualizados.add(medicoActualizado);
+            System.out.println("➕ Agregando nuevo servicio: " + servicio.getNombreServicio());
+            medicoService.createMedico(nuevoMedico);
         }
+        
+        // 8. Obtener todos los registros actualizados
+        List<Medico> medicosActualizados = medicoService.getAllMedicos().stream()
+            .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario().equals(usuarioId))
+            .collect(Collectors.toList());
 
         System.out.println("✅ Médico actualizado exitosamente: " + medicosActualizados.size() + " registros");
+        System.out.println("   - Servicios eliminados: " + serviciosAEliminar.size());
+        System.out.println("   - Servicios agregados: " + serviciosAAgregar.size());
+        System.out.println("   - Servicios mantenidos: " + serviciosAMantener.size());
+        
         return ResponseEntity.ok(medicosActualizados);
 
     } catch (Exception e) {
@@ -194,6 +287,82 @@ public ResponseEntity<?> updateMedicoWithServices(
     @GetMapping
     public List<Medico> getAllMedicos() {
         return medicoService.getAllMedicos();
+    }
+    
+    // Obtener médico por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getMedicoById(@PathVariable Long id) {
+        try {
+            System.out.println("🔍 Buscando médico con ID: " + id);
+            Medico medico = medicoService.findById(id);
+            
+            if (medico == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            System.out.println("✅ Médico encontrado: " + medico.getUsuario().getNombre());
+            return ResponseEntity.ok(medico);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al buscar médico: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error al buscar médico: " + e.getMessage());
+        }
+    }
+    
+    // Obtener médicos agrupados por usuario con todos sus servicios
+    @GetMapping("/con-servicios")
+    public ResponseEntity<?> getMedicosConServicios() {
+        try {
+            System.out.println("📋 Obteniendo médicos agrupados con servicios");
+            
+            List<Medico> todosMedicos = medicoService.getAllMedicos();
+            
+            // Agrupar por usuario
+            Map<Long, List<Medico>> medicosPorUsuario = todosMedicos.stream()
+                .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario() != null)
+                .collect(Collectors.groupingBy(m -> m.getUsuario().getIdUsuario()));
+            
+            List<Map<String, Object>> resultado = new ArrayList<>();
+            
+            for (Map.Entry<Long, List<Medico>> entry : medicosPorUsuario.entrySet()) {
+                List<Medico> registros = entry.getValue();
+                Medico primero = registros.get(0);
+                
+                Map<String, Object> medicoInfo = new HashMap<>();
+                medicoInfo.put("usuarioId", entry.getKey());
+                medicoInfo.put("nombre", primero.getUsuario().getNombre());
+                medicoInfo.put("apellidoPaterno", primero.getUsuario().getApellidoPaterno());
+                medicoInfo.put("apellidoMaterno", primero.getUsuario().getApellidoMaterno());
+                medicoInfo.put("cedula", primero.getCedulaProfecional());
+                
+                // Listar todos los registros de médico con sus servicios
+                List<Map<String, Object>> registrosDetalle = registros.stream().map(m -> {
+                    Map<String, Object> reg = new HashMap<>();
+                    reg.put("medicoId", m.getId());
+                    reg.put("servicioId", m.getServicio() != null ? m.getServicio().getId() : null);
+                    reg.put("servicio", m.getServicio() != null ? m.getServicio().getNombreServicio() : "SIN SERVICIO");
+                    
+                    // Contar horarios de este registro específico
+                    long horarios = horarioMedicoService.findByMedicoId(m.getId()).size();
+                    reg.put("horarios", horarios);
+                    
+                    return reg;
+                }).collect(Collectors.toList());
+                
+                medicoInfo.put("registros", registrosDetalle);
+                medicoInfo.put("totalRegistros", registros.size());
+                
+                resultado.add(medicoInfo);
+            }
+            
+            System.out.println("✅ Total usuarios médicos: " + resultado.size());
+            return ResponseEntity.ok(resultado);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 
     // Crear múltiples horarios ligados a un médico existente
@@ -216,12 +385,32 @@ public ResponseEntity<?> updateMedicoWithServices(
         }
     }
 
-    // Obtener medico por usuario id
+    // Obtener todos los registros de medico por usuario id
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Medico> findByUsuarioId(@PathVariable("usuarioId") Long usuarioId) {
-        Medico m = medicoService.findByUsuario_Id(usuarioId);
-        if (m == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(m);
+    public ResponseEntity<?> findByUsuarioId(@PathVariable("usuarioId") Long usuarioId) {
+        try {
+            System.out.println("🔍 Buscando médicos del usuario ID: " + usuarioId);
+            
+            // Buscar todos los registros de este usuario
+            List<Medico> medicos = medicoService.getAllMedicos().stream()
+                .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario().equals(usuarioId))
+                .collect(Collectors.toList());
+            
+            if (medicos.isEmpty()) {
+                System.out.println("⚠️ No se encontraron registros para usuario ID: " + usuarioId);
+                return ResponseEntity.notFound().build();
+            }
+            
+            System.out.println("✅ Encontrados " + medicos.size() + " registros para el usuario");
+            
+            // Retornar el primer médico encontrado
+            return ResponseEntity.ok(medicos.get(0));
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al buscar médicos del usuario: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al buscar médicos del usuario: " + e.getMessage());
+        }
     }
 
     // Obtener medico por correo electrónico (query param)
@@ -235,8 +424,9 @@ public ResponseEntity<?> updateMedicoWithServices(
     // Obtener horarios del médico por usuario id
     @GetMapping("/usuario/{usuarioId}/horarios")
     public ResponseEntity<?> horariosByUsuarioId(@PathVariable("usuarioId") Long usuarioId) {
-        Medico m = medicoService.findByUsuario_Id(usuarioId);
-        if (m == null) return ResponseEntity.notFound().build();
+        List<Medico> medicos = medicoService.findAllByUsuario_Id(usuarioId);
+        if (medicos.isEmpty()) return ResponseEntity.notFound().build();
+        Medico m = medicos.get(0); // Usar el primer médico encontrado
         return ResponseEntity.ok(horarioMedicoService.findByMedicoId(m.getId()));
     }
 

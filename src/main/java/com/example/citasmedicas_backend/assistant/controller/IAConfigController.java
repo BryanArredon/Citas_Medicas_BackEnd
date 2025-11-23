@@ -30,13 +30,13 @@ public class IAConfigController {
      */
     @GetMapping
     public ResponseEntity<Map<String, String>> obtenerConfiguracion() {
-        log.info("📡 API: Solicitando configuración de OpenAI");
+        log.info("API: Solicitando configuración de OpenAI");
         
         Map<String, String> config = new HashMap<>();
         config.put("apiKey", apiKey);
         config.put("assistantId", assistantId);
         
-        log.info("✅ Configuración proporcionada (API Key: {}...)", 
+        log.info("Configuración proporcionada (API Key: {}...)", 
                  apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) : "N/A");
         
         return ResponseEntity.ok(config);

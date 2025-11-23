@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.example.citasmedicas_backend.citas.model.Medico;
+import java.util.List;
 
 @Repository
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
@@ -14,6 +15,5 @@ public interface MedicoRepository extends JpaRepository<Medico, Long> {
 	Medico findByUsuario_CorreoElectronico(String correo);
 
 	// Buscar por id de usuario
-
-	Medico findByUsuario_IdUsuario(Long idUsuario);
+	List<Medico> findAllByUsuario_IdUsuario(Long idUsuario);
 }

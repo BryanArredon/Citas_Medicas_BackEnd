@@ -108,12 +108,13 @@ public class IAAssistantService {
     }
 
     /**
-     * Busca médicos (opcionalmente por servicio)
+     * Busca médicos (opcionalmente por servicio o nombre)
+     * IMPORTANTE: Agrupa por usuario y devuelve el medico_id que tiene horarios asociados
      */
-    public Map<String, Object> buscarMedicos(Long servicioId) {
-        log.info("🤖 IA solicitó buscar médicos (servicio: {})", servicioId);
+    public Map<String, Object> buscarMedicos(Long servicioId, String nombre) {
+        log.info("🤖 IA solicitó buscar médicos (servicio: {}, nombre: {})", servicioId, nombre);
         
-        List<Medico> medicos;
+        List<Medico> todosMedicos = medicoRepository.findAll();
         String servicioNombre = null;
         
         if (servicioId != null) {
@@ -122,32 +123,88 @@ public class IAAssistantService {
                 return Map.of("exito", false, "mensaje", "Servicio no encontrado");
             }
             servicioNombre = servicioOpt.get().getNombreServicio();
-            medicos = medicoRepository.findAll().stream()
-                .filter(m -> m.getServicio() != null && m.getServicio().getId().equals(servicioId))
-                .collect(Collectors.toList());
-        } else {
-            medicos = medicoRepository.findAll();
         }
         
-        List<Map<String, Object>> medicosData = medicos.stream()
-            .map(m -> {
-                Map<String, Object> medicoMap = new HashMap<>();
-                medicoMap.put("id", m.getId());
-                if (m.getUsuario() != null) {
-                    String nombreCompleto = m.getUsuario().getNombre() + " " + 
-                                           m.getUsuario().getApellidoPaterno();
-                    if (m.getUsuario().getApellidoMaterno() != null) {
-                        nombreCompleto += " " + m.getUsuario().getApellidoMaterno();
-                    }
-                    medicoMap.put("nombre", nombreCompleto);
-                }
-                medicoMap.put("cedula", m.getCedulaProfecional());
-                if (m.getServicio() != null) {
-                    medicoMap.put("servicio", m.getServicio().getNombreServicio());
-                }
-                return medicoMap;
+        // Filtrar y agrupar médicos
+        final String nombreBusqueda = nombre != null ? nombre.toLowerCase() : null;
+
+        Map<Long, List<Medico>> medicosPorUsuario = todosMedicos.stream()
+            .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario() != null)
+            // Filtro por nombre si se proporciona
+            .filter(m -> {
+                if (nombreBusqueda == null) return true;
+                Usuario u = m.getUsuario();
+                String nombreCompleto = (u.getNombre() + " " + u.getApellidoPaterno() + " " + 
+                                       (u.getApellidoMaterno() != null ? u.getApellidoMaterno() : "")).toLowerCase();
+                return nombreCompleto.contains(nombreBusqueda);
             })
-            .collect(Collectors.toList());
+            .collect(Collectors.groupingBy(m -> m.getUsuario().getIdUsuario()));
+        
+        List<Map<String, Object>> medicosData = new ArrayList<>();
+        
+        for (Map.Entry<Long, List<Medico>> entry : medicosPorUsuario.entrySet()) {
+            List<Medico> registrosMedico = entry.getValue();
+            
+            // Verificar si algún registro ofrece el servicio solicitado
+            if (servicioId != null) {
+                boolean ofreceServicio = registrosMedico.stream()
+                    .anyMatch(m -> m.getServicio() != null && m.getServicio().getId().equals(servicioId));
+                if (!ofreceServicio) {
+                    continue; // Saltar este médico
+                }
+            }
+            
+            // Buscar el registro que tiene horarios asociados (prioridad) o el primero disponible
+            Medico medicoConHorarios = registrosMedico.stream()
+                .filter(m -> {
+                    long countHorarios = horarioMedicoRepository.findAll().stream()
+                        .filter(h -> h.getMedico() != null && h.getMedico().getId().equals(m.getId()))
+                        .count();
+                    return countHorarios > 0;
+                })
+                .findFirst()
+                .orElse(registrosMedico.get(0)); // Si ninguno tiene horarios, usar el primero
+            
+            // Obtener todos los servicios que ofrece este médico
+            List<Map<String, Object>> serviciosOfrecidos = registrosMedico.stream()
+                .filter(m -> m.getServicio() != null)
+                .map(m -> {
+                    Map<String, Object> svc = new HashMap<>();
+                    svc.put("id", m.getServicio().getId());
+                    svc.put("nombre", m.getServicio().getNombreServicio());
+                    return svc;
+                })
+                // Eliminar duplicados basados en ID
+                .collect(Collectors.collectingAndThen(
+                    Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(m -> ((Long)m.get("id"))))),
+                    ArrayList::new
+                ));
+            
+            Map<String, Object> medicoMap = new HashMap<>();
+            medicoMap.put("id", medicoConHorarios.getId()); // ID del médico que tiene horarios
+            medicoMap.put("usuarioId", entry.getKey());
+            
+            if (medicoConHorarios.getUsuario() != null) {
+                String nombreCompleto = medicoConHorarios.getUsuario().getNombre() + " " + 
+                                       medicoConHorarios.getUsuario().getApellidoPaterno();
+                if (medicoConHorarios.getUsuario().getApellidoMaterno() != null) {
+                    nombreCompleto += " " + medicoConHorarios.getUsuario().getApellidoMaterno();
+                }
+                medicoMap.put("nombre", nombreCompleto);
+            }
+            
+            medicoMap.put("cedula", medicoConHorarios.getCedulaProfecional());
+            medicoMap.put("servicios", serviciosOfrecidos);
+            
+            // Contar horarios disponibles
+            long horariosDisponibles = horarioMedicoRepository.findAll().stream()
+                .filter(h -> h.getMedico() != null && h.getMedico().getId().equals(medicoConHorarios.getId()))
+                .filter(h -> h.getEstadoMedico() == EstadoMedico.DISPONIBLE)
+                .count();
+            medicoMap.put("horariosDisponibles", horariosDisponibles);
+            
+            medicosData.add(medicoMap);
+        }
         
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("exito", true);
@@ -157,15 +214,28 @@ public class IAAssistantService {
         }
         resultado.put("total", medicosData.size());
         
+        log.info("Encontrados {} médicos que ofrecen {}", medicosData.size(), 
+                 servicioNombre != null ? servicioNombre : "cualquier servicio");
+        
         return resultado;
     }
 
     /**
-     * Obtiene próximos horarios disponibles de un médico (siguientes 7 días)
+     * Obtiene próximos horarios disponibles de un médico (siguientes 30 días)
+     * Si medicoId es null, devuelve horarios de TODOS los médicos
+     * Método alias para compatibilidad con la configuración de OpenAI Assistant
+     */
+    public Map<String, Object> obtenerHorarios(Long medicoId) {
+        log.info("🤖 IA solicitó obtenerHorarios (médico: {})", medicoId);
+        return obtenerProximosHorariosDisponibles(medicoId);
+    }
+
+    /**
+     * Obtiene próximos horarios disponibles de un médico (siguientes 30 días)
      * Si medicoId es null, devuelve horarios de TODOS los médicos
      */
     public Map<String, Object> obtenerProximosHorariosDisponibles(Long medicoId) {
-        log.info("🤖 IA solicitó próximos horarios del médico: {}", medicoId);
+        log.info("IA solicitó próximos horarios del médico: {}", medicoId);
         
         try {
             LocalDate hoy = LocalDate.now();
@@ -173,33 +243,32 @@ public class IAAssistantService {
             
             List<Map<String, Object>> horariosDisponibles = new ArrayList<>();
             
-            // Obtener todos los horarios médicos disponibles (filtrados por médico si se especifica)
-            List<HorarioMedico> horarios = horarioMedicoRepository.findAll().stream()
-                .filter(h -> h != null && h.getFecha() != null && h.getHorarioInicio() != null && h.getHorarioFin() != null)
-                .filter(h -> medicoId == null || (h.getMedico() != null && h.getMedico().getId() != null && h.getMedico().getId().equals(medicoId)))
-                .filter(h -> {
+            // Obtener todos los horarios de la agenda disponibles (filtrados por médico si se especifica)
+            List<Agenda> horarios = agendaRepository.findAll().stream()
+                .filter(a -> a != null && a.getFecha() != null && a.getHoraInicio() != null && a.getHoraFin() != null)
+                .filter(a -> medicoId == null || (a.getMedico() != null && a.getMedico().getId() != null && a.getMedico().getId().equals(medicoId)))
+                .filter(a -> {
                     try {
-                        LocalDate fecha = h.getFecha();
+                        LocalDate fecha = a.getFecha().toLocalDate();
                         // Incluir desde hoy en adelante hasta 30 días
                         return !fecha.isBefore(hoy) && !fecha.isAfter(finVentana);
                     } catch (Exception e) {
-                        log.warn("Error procesando fecha de horario {}: {}", h.getId(), e.getMessage());
+                        log.warn("Error procesando fecha de agenda {}: {}", a.getId(), e.getMessage());
                         return false;
                     }
                 })
-                .filter(h -> h.getEstadoMedico() == EstadoMedico.DISPONIBLE) // Solo horarios disponibles
-                .sorted((h1, h2) -> h1.getFecha().compareTo(h2.getFecha())) // Ordenar por fecha
+                .sorted((a1, a2) -> a1.getFecha().compareTo(a2.getFecha())) // Ordenar por fecha
                 .collect(Collectors.toList());
             
-            log.info("📋 Encontrados {} horarios disponibles en el rango de fechas (desde {} hasta {})", 
+            log.info("Encontrados {} horarios disponibles en el rango de fechas (desde {} hasta {})",
                      horarios.size(), hoy, finVentana);
-            
-            for (HorarioMedico horario : horarios) {
+
+            for (Agenda horario : horarios) {
                 try {
                     Map<String, Object> horarioMap = new HashMap<>();
                     horarioMap.put("horarioId", horario.getId());
                     horarioMap.put("medicoId", horario.getMedico() != null && horario.getMedico().getId() != null ? horario.getMedico().getId() : null);
-                    
+
                     // Obtener nombre del médico desde Usuario
                     String medicoNombre = "Desconocido";
                     if (horario.getMedico() != null && horario.getMedico().getUsuario() != null) {
@@ -212,68 +281,50 @@ public class IAAssistantService {
                         }
                     }
                     horarioMap.put("medicoNombre", medicoNombre);
-                    
-                    horarioMap.put("fecha", horario.getFecha().toString());
-                    horarioMap.put("diaSemana", horario.getFecha().getDayOfWeek().toString());
-                    horarioMap.put("horaInicio", horario.getHorarioInicio().toString());
-                    horarioMap.put("horaFin", horario.getHorarioFin().toString());
-                    horarioMap.put("duracion", horario.getDuracion());
-                    horarioMap.put("estado", horario.getEstadoMedico().toString());
-                    
+
+                    horarioMap.put("fecha", horario.getFecha().toLocalDate().toString());
+                    horarioMap.put("diaSemana", horario.getFecha().toLocalDate().getDayOfWeek().toString());
+                    horarioMap.put("horaInicio", horario.getHoraInicio().toString());
+                    horarioMap.put("horaFin", horario.getHoraFin().toString());
+                    horarioMap.put("duracion", 60); // Duración por defecto de 60 minutos para agenda
+                    horarioMap.put("estado", "DISPONIBLE"); // Los horarios en agenda están disponibles
+
+                    // Agregar información del servicio asociado a este horario/médico
+                    if (horario.getMedico() != null && horario.getMedico().getServicio() != null) {
+                        horarioMap.put("servicioId", horario.getMedico().getServicio().getId());
+                        horarioMap.put("servicioNombre", horario.getMedico().getServicio().getNombreServicio());
+                    }
+
                     horariosDisponibles.add(horarioMap);
                 } catch (Exception e) {
                     log.error("Error procesando horario {}: {}", horario.getId(), e.getMessage());
                 }
             }
-            
-            log.info("✅ Retornando {} horarios disponibles", horariosDisponibles.size());
-            
-            // Si no hay horarios en el futuro, mostrar todos los disponibles para debugging
+
+            log.info("Retornando {} horarios disponibles", horariosDisponibles.size());
+
+            // SI NO HAY HORARIOS FUTUROS, NO MOSTRAR FECHAS PASADAS
             if (horariosDisponibles.isEmpty()) {
-                log.warn("⚠️ No se encontraron horarios futuros. Mostrando todos los horarios DISPONIBLES:");
-                List<HorarioMedico> todosDisponibles = horarioMedicoRepository.findAll().stream()
-                    .filter(h -> h.getEstadoMedico() == EstadoMedico.DISPONIBLE)
-                    .collect(Collectors.toList());
-                
-                for (HorarioMedico h : todosDisponibles) {
-                    log.info("  - ID: {}, Médico: {}, Fecha: {}, Hora: {}-{}", 
-                             h.getId(), h.getMedico() != null ? h.getMedico().getId() : "N/A",
-                             h.getFecha(), h.getHorarioInicio(), h.getHorarioFin());
-                    
-                    // Agregar todos los horarios disponibles sin importar la fecha
-                    Map<String, Object> horarioMap = new HashMap<>();
-                    horarioMap.put("horarioId", h.getId());
-                    horarioMap.put("medicoId", h.getMedico() != null ? h.getMedico().getId() : null);
-                    
-                    String medicoNombre = "Desconocido";
-                    if (h.getMedico() != null && h.getMedico().getUsuario() != null) {
-                        Usuario usuario = h.getMedico().getUsuario();
-                        medicoNombre = (usuario.getNombre() != null ? usuario.getNombre() : "") + " " +
-                                      (usuario.getApellidoPaterno() != null ? usuario.getApellidoPaterno() : "");
-                        medicoNombre = medicoNombre.trim();
-                    }
-                    horarioMap.put("medicoNombre", medicoNombre);
-                    horarioMap.put("fecha", h.getFecha().toString());
-                    horarioMap.put("diaSemana", h.getFecha().getDayOfWeek().toString());
-                    horarioMap.put("horaInicio", h.getHorarioInicio().toString());
-                    horarioMap.put("horaFin", h.getHorarioFin().toString());
-                    horarioMap.put("duracion", h.getDuracion());
-                    horarioMap.put("estado", h.getEstadoMedico().toString());
-                    horarioMap.put("advertencia", "Fecha pasada o fuera de rango");
-                    
-                    horariosDisponibles.add(horarioMap);
-                }
+                log.warn("No se encontraron horarios futuros disponibles para médico: {}", medicoId);
+                return Map.of(
+                    "exito", false,
+                    "mensaje", "No hay horarios disponibles en los próximos 30 días",
+                    "horarios", new ArrayList<>(),
+                    "total", 0,
+                    "periodo", "Próximos 30 días",
+                    "sugerencia", "Contacta directamente con el médico para agendar una cita"
+                );
             }
             
             return Map.of(
                 "exito", true,
                 "horarios", horariosDisponibles,
                 "total", horariosDisponibles.size(),
-                "periodo", "Próximos 30 días desde " + hoy,
-                "mensaje", medicoId == null ? "Horarios de todos los médicos" : "Horarios del médico " + medicoId
+                "periodo", "Próximos 30 días",
+                "mensaje", medicoId == null ? "Horarios de todos los médicos" : "Horarios del médico solicitado"
             );
         } catch (Exception e) {
-            log.error("❌ Error al obtener horarios disponibles: {}", e.getMessage(), e);
+            log.error("Error al obtener horarios disponibles: {}", e.getMessage(), e);
             return Map.of(
                 "exito", false,
                 "mensaje", "Error al obtener horarios: " + e.getMessage(),
@@ -287,7 +338,7 @@ public class IAAssistantService {
      * Obtiene las citas de un paciente
      */
     public Map<String, Object> obtenerCitasPaciente(Long pacienteId) {
-        log.info("🤖 IA solicitó citas del paciente: {}", pacienteId);
+        log.info("IA solicitó citas del paciente: {}", pacienteId);
         
         if (pacienteId == null) {
             return Map.of("exito", false, "mensaje", "Se requiere el ID del paciente");
@@ -332,7 +383,7 @@ public class IAAssistantService {
     @Transactional
     public Map<String, Object> crearCita(Long pacienteId, Long medicoId, Long servicioId, 
                                         Long agendaId, String motivo) {
-        log.info("🤖 IA solicitó crear cita (paciente: {}, médico: {}, servicio: {}, agenda: {})", 
+        log.info("IA solicitó crear cita (paciente: {}, médico: {}, servicio: {}, agenda: {})", 
                  pacienteId, medicoId, servicioId, agendaId);
         
         try {
@@ -429,34 +480,45 @@ public class IAAssistantService {
 
     /**
      * Crear/agendar una nueva cita médica
-     * @param pacienteId ID del paciente
+     * @param pacienteId ID del paciente (opcional si se envía usuarioId)
+     * @param usuarioId ID del usuario (opcional si se envía pacienteId)
      * @param horarioId ID del horario médico
      * @param servicioId ID del servicio médico
      * @param motivo Motivo de la consulta
      */
     @Transactional
-    public Map<String, Object> agendarCita(Long pacienteId, Long horarioId, Long servicioId, String motivo) {
-        log.info("🤖 IA solicitó agendar cita - Paciente: {}, Horario: {}, Servicio: {}", pacienteId, horarioId, servicioId);
+    public Map<String, Object> agendarCita(Long pacienteId, Long usuarioId, Long horarioId, Long servicioId, String motivo) {
+        log.info("IA solicitó agendar cita - PacienteID: {}, UsuarioID: {}, Horario: {}, Servicio: {}", 
+                 pacienteId, usuarioId, horarioId, servicioId);
         
         try {
             // Validar paciente
-            Optional<PacienteDetalle> pacienteOpt = pacienteRepository.findById(pacienteId);
-            if (pacienteOpt.isEmpty()) {
-                return Map.of("exito", false, "mensaje", "Paciente no encontrado");
+            PacienteDetalle paciente = null;
+            
+            // 1. Intentar por ID de paciente directo
+            if (pacienteId != null) {
+                Optional<PacienteDetalle> pOpt = pacienteRepository.findById(pacienteId);
+                if (pOpt.isPresent()) {
+                    paciente = pOpt.get();
+                }
             }
             
-            // Validar horario
-            Optional<HorarioMedico> horarioOpt = horarioMedicoRepository.findById(horarioId);
+            // 2. Si no se encontró, intentar por ID de usuario
+            if (paciente == null && usuarioId != null) {
+                paciente = pacienteRepository.findByUsuarioIdUsuario(usuarioId);
+            }
+            
+            if (paciente == null) {
+                return Map.of("exito", false, "mensaje", "Paciente no encontrado (ID: " + pacienteId + ", Usuario: " + usuarioId + ")");
+            }
+            
+            // Validar horario - ahora desde tabla agenda
+            Optional<Agenda> horarioOpt = agendaRepository.findById(horarioId);
             if (horarioOpt.isEmpty()) {
-                return Map.of("exito", false, "mensaje", "Horario no encontrado");
+                return Map.of("exito", false, "mensaje", "Horario no encontrado en agenda");
             }
             
-            HorarioMedico horario = horarioOpt.get();
-            
-            // Verificar que el horario esté disponible
-            if (horario.getEstadoMedico() != EstadoMedico.DISPONIBLE) {
-                return Map.of("exito", false, "mensaje", "Este horario ya no está disponible");
-            }
+            Agenda horario = horarioOpt.get();
             
             // Validar servicio
             Optional<Servicio> servicioOpt = servicioRepository.findById(servicioId);
@@ -467,10 +529,8 @@ public class IAAssistantService {
             Servicio servicio = servicioOpt.get();
             
             // Verificar que el médico ofrezca el servicio
-            if (horario.getMedico().getServicio() == null || 
-                !horario.getMedico().getServicio().getId().equals(servicioId)) {
-                return Map.of("exito", false, "mensaje", "El médico no ofrece este servicio");
-            }
+            // NOTA: Se relaja esta validación porque ahora el médico puede tener múltiples servicios o la relación puede ser compleja
+            // Si el servicio existe y el médico tiene horario, permitimos la cita.
             
             // Buscar estatus "PENDIENTE"
             Optional<Estatus> estatusOpt = estatusRepository.findAll().stream()
@@ -481,41 +541,52 @@ public class IAAssistantService {
                 return Map.of("exito", false, "mensaje", "No se encontró el estatus PENDIENTE en el sistema");
             }
             
-            // Crear la cita
+            // Crear la cita con estado PENDIENTE para que el médico la revise
             Cita nuevaCita = new Cita();
-            nuevaCita.setPaciente(pacienteOpt.get());
+            nuevaCita.setPaciente(paciente);
             nuevaCita.setMedico(horario.getMedico());
             nuevaCita.setServicio(servicio);
             nuevaCita.setFechaSolicitud(LocalDateTime.now());
             nuevaCita.setMotivo(motivo != null ? motivo : "Consulta médica");
-            nuevaCita.setEstatus(estatusOpt.get());
+            
+            // Buscar estatus "Pendiente" para que el médico pueda aceptar/rechazar/posponer
+            Optional<Estatus> estatusPendiente = estatusRepository.findAll().stream()
+                .filter(e -> "Pendiente".equalsIgnoreCase(e.getEstatus()))
+                .findFirst();
+            
+            if (estatusPendiente.isPresent()) {
+                nuevaCita.setEstatus(estatusPendiente.get());
+            } else {
+                log.warn("No se encontró estatus 'Pendiente', la cita se creará sin estatus definido");
+            }
+            
             nuevaCita.setEstadoPago("PENDIENTE");
             nuevaCita.setMontoPagado(servicio.getCosto());
             
             // Guardar la cita
             Cita citaGuardada = citaRepository.save(nuevaCita);
             
-            // Actualizar el estado del horario a NO_DISPONIBLE
-            horario.setEstadoMedico(EstadoMedico.NO_DISPONIBLE);
-            horarioMedicoRepository.save(horario);
+            // Eliminar el horario de la agenda para que ya no aparezca como disponible
+            agendaRepository.delete(horario);
             
-            log.info("✅ Cita agendada exitosamente: ID {}", citaGuardada.getId());
+            log.info("Cita agendada exitosamente: ID {}", citaGuardada.getId());
             
             return Map.of(
                 "exito", true,
-                "mensaje", "Cita agendada exitosamente",
+                "mensaje", "Cita agendada exitosamente. El médico revisará y confirmará la cita.",
                 "citaId", citaGuardada.getId(),
-                "fecha", horario.getFecha().toString(),
-                "horaInicio", horario.getHorarioInicio().toString(),
-                "horaFin", horario.getHorarioFin().toString(),
+                "fecha", horario.getFecha().toLocalDate().toString(),
+                "horaInicio", horario.getHoraInicio().toString(),
+                "horaFin", horario.getHoraFin().toString(),
                 "medico", horario.getMedico().getUsuario().getNombre() + " " + 
                          horario.getMedico().getUsuario().getApellidoPaterno(),
                 "servicio", servicio.getNombreServicio(),
-                "costo", servicio.getCosto()
+                "estado", "PENDIENTE",
+                "nota", "El médico debe aceptar, rechazar o posponer esta cita. Recibirás una notificación por email cuando se procese."
             );
             
         } catch (Exception e) {
-            log.error("❌ Error al agendar cita: {}", e.getMessage(), e);
+            log.error("Error al agendar cita: {}", e.getMessage(), e);
             return Map.of("exito", false, "mensaje", "Error al agendar la cita: " + e.getMessage());
         }
     }
@@ -525,34 +596,58 @@ public class IAAssistantService {
      * @param usuarioId ID del usuario
      */
     public Map<String, Object> obtenerDatosPaciente(Long usuarioId) {
-        log.info("🤖 IA solicitó datos del paciente (usuario: {})", usuarioId);
+        log.info("IA solicitó datos del paciente (usuario: {})", usuarioId);
         
         try {
             // Buscar paciente por ID de usuario
             List<PacienteDetalle> pacientes = pacienteRepository.findAll();
+            log.info("Total de pacientes en BD: {}", pacientes.size());
+            
             Optional<PacienteDetalle> pacienteOpt = pacientes.stream()
-                .filter(p -> p.getUsuario() != null && p.getUsuario().getIdUsuario().equals(usuarioId))
+                .filter(p -> {
+                    if (p.getUsuario() == null) {
+                        log.warn("Paciente {} sin usuario asociado", p.getId());
+                        return false;
+                    }
+                    boolean coincide = p.getUsuario().getIdUsuario().equals(usuarioId);
+                    if (coincide) {
+                        log.info("Paciente encontrado: {} (usuario: {})", p.getId(), usuarioId);
+                    }
+                    return coincide;
+                })
                 .findFirst();
             
             if (pacienteOpt.isEmpty()) {
-                return Map.of("exito", false, "mensaje", "Paciente no encontrado");
+                log.error("No se encontró paciente para usuario: {}", usuarioId);
+                log.info("Usuarios disponibles en pacientes: {}", 
+                    pacientes.stream()
+                        .filter(p -> p.getUsuario() != null)
+                        .map(p -> p.getUsuario().getIdUsuario())
+                        .distinct()
+                        .toList());
+                return Map.of("exito", false, "mensaje", "Paciente no encontrado para el usuario ID: " + usuarioId);
             }
             
             PacienteDetalle paciente = pacienteOpt.get();
             Usuario usuario = paciente.getUsuario();
             
+            String nombreCompleto = usuario.getNombre() + " " + usuario.getApellidoPaterno() + 
+                     (usuario.getApellidoMaterno() != null ? " " + usuario.getApellidoMaterno() : "");
+            
+            log.info("Datos obtenidos - Paciente: {} ({}), Usuario: {}", 
+                     paciente.getId(), nombreCompleto, usuario.getIdUsuario());
+            
             return Map.of(
                 "exito", true,
                 "pacienteId", paciente.getId(),
                 "usuarioId", usuario.getIdUsuario(),
-                "nombre", usuario.getNombre() + " " + usuario.getApellidoPaterno() + 
-                         (usuario.getApellidoMaterno() != null ? " " + usuario.getApellidoMaterno() : ""),
+                "nombre", nombreCompleto,
                 "correo", usuario.getCorreoElectronico(),
                 "telefono", usuario.getTelefono() != null ? usuario.getTelefono() : "No especificado"
             );
             
         } catch (Exception e) {
-            log.error("❌ Error al obtener datos del paciente: {}", e.getMessage(), e);
+            log.error("Error al obtener datos del paciente: {}", e.getMessage(), e);
             return Map.of("exito", false, "mensaje", "Error al obtener datos: " + e.getMessage());
         }
     }

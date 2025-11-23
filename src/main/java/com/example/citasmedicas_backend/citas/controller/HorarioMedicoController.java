@@ -88,8 +88,10 @@ public class HorarioMedicoController {
                     if (m == null) {
                         // Si el médico no existe, intentar crearlo con el ID del usuario
                         logger.warn("Médico con ID {} no encontrado. Intentando buscar por usuario...", mid);
-                        m = medicoService.findByUsuario_Id(mid);
-                        if (m == null) {
+                        List<com.example.citasmedicas_backend.citas.model.Medico> medicos = medicoService.findAllByUsuario_Id(mid);
+                        if (!medicos.isEmpty()) {
+                            m = medicos.get(0);
+                        } else {
                             logger.error("No se encontró médico para el ID {} ni como médico ni como usuario", mid);
                         }
                     }

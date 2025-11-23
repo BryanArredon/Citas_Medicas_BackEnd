@@ -26,13 +26,18 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     List<CitaProximaDTO> findCitasProximasByUsuarioId(@Param("usuarioId") Long usuarioId);
 
     @Query("SELECT new com.example.citasmedicas_backend.citas.dto.CitaProximaDTO(" +
-           "c.id, ag.fecha, ag.horaInicio, ag.horaFin, " +
+           "c.id, " +
+           "COALESCE(ag.fecha, c.fechaSolicitud), " +
+           "COALESCE(ag.horaInicio, CAST('08:00:00' AS java.time.LocalTime)), " +
+           "COALESCE(ag.horaFin, CAST('09:00:00' AS java.time.LocalTime)), " +
            "p.usuario.nombre, p.usuario.apellidoPaterno, p.usuario.apellidoMaterno, " +
-           "s.nombreServicio, s.area.nombreArea, 'Confirmada', c.motivo, c.fechaSolicitud) " +
+           "s.nombreServicio, s.area.nombreArea, " +
+           "COALESCE(c.estatus.estatus, 'Sin estado'), " +
+           "c.motivo, c.fechaSolicitud) " +
            "FROM Cita c " +
            "JOIN c.paciente p " +
            "JOIN c.medico m " +
-           "JOIN c.agenda ag " +
+           "LEFT JOIN c.agenda ag " +
            "JOIN c.servicio s " +
            "JOIN s.area " +
            "WHERE m.id = :medicoId " +

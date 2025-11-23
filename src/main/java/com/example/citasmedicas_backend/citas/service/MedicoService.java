@@ -113,7 +113,7 @@ public class MedicoService {
         return medicoRepository.findByUsuario_CorreoElectronico(correo);
     }
 
-    public Medico findByUsuario_Id(Long usuarioId) {
-        return medicoRepository.findByUsuario_IdUsuario(usuarioId);
+    public List<Medico> findAllByUsuario_Id(Long usuarioId) {
+        return medicoRepository.findAllByUsuario_IdUsuario(usuarioId);
     }
 }

@@ -21,20 +21,20 @@ public class Agenda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idAgenda")
+    @Column(name = "id_agenda")
     private Long id;
 
     @Column(name = "fecha", nullable = false)
     private LocalDateTime fecha;
 
-    @Column(name = "horaInicio", nullable = false)
+    @Column(name = "hora_inicio", nullable = false)
     private LocalTime horaInicio;
 
-    @Column(name = "horaFin", nullable = false)
+    @Column(name = "hora_fin", nullable = false)
     private LocalTime horaFin;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "idMedicoDetalle", referencedColumnName = "id")
+    @JoinColumn(name = "id_medico_detalle", referencedColumnName = "id")
     private Medico medico;
 
     // Constructores

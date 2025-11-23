@@ -34,10 +34,10 @@ public class IAFuncionesController {
         log.info("📡 API: Solicitando áreas médicas");
         try {
             Map<String, Object> resultado = iaService.obtenerAreas();
-            log.info("✅ Áreas obtenidas correctamente: {}", resultado);
+            log.info("Áreas obtenidas correctamente: {}", resultado);
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
-            log.error("❌ Error al obtener áreas: ", e);
+            log.error("Error al obtener áreas: ", e);
             Map<String, Object> error = new HashMap<>();
             error.put("exito", false);
             error.put("mensaje", "Error al obtener áreas: " + e.getMessage());
@@ -51,13 +51,13 @@ public class IAFuncionesController {
      */
     @GetMapping("/servicios")
     public ResponseEntity<Map<String, Object>> obtenerServicios() {
-        log.info("📡 API: Solicitando servicios");
+        log.info("API: Solicitando servicios");
         try {
             Map<String, Object> resultado = iaService.obtenerServicios();
-            log.info("✅ Servicios obtenidos correctamente");
+            log.info("Servicios obtenidos correctamente");
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
-            log.error("❌ Error al obtener servicios: ", e);
+            log.error("Error al obtener servicios: ", e);
             Map<String, Object> error = new HashMap<>();
             error.put("exito", false);
             error.put("mensaje", "Error al obtener servicios: " + e.getMessage());
@@ -66,13 +66,14 @@ public class IAFuncionesController {
     }
 
     /**
-     * Busca médicos por servicio
+     * Busca médicos por servicio o nombre
      */
     @GetMapping("/medicos")
     public ResponseEntity<Map<String, Object>> buscarMedicos(
-            @RequestParam(required = false) Long servicioId) {
-        log.info("📡 API: Buscando médicos (servicio: {})", servicioId);
-        return ResponseEntity.ok(iaService.buscarMedicos(servicioId));
+            @RequestParam(required = false) Long servicioId,
+            @RequestParam(required = false) String nombre) {
+        log.info("API: Buscando médicos (servicio: {}, nombre: {})", servicioId, nombre);
+        return ResponseEntity.ok(iaService.buscarMedicos(servicioId, nombre));
     }
 
     /**
@@ -82,13 +83,13 @@ public class IAFuncionesController {
     @GetMapping("/horarios")
     public ResponseEntity<Map<String, Object>> obtenerHorarios(
             @RequestParam(required = false) Long medicoId) {
-        log.info("📡 API: Obteniendo horarios (médico: {})", medicoId != null ? medicoId : "TODOS");
+        log.info("API: Obteniendo horarios (médico: {})", medicoId != null ? medicoId : "TODOS");
         try {
             Map<String, Object> resultado = iaService.obtenerProximosHorariosDisponibles(medicoId);
-            log.info("✅ Horarios obtenidos correctamente: {}", resultado);
+            log.info("Horarios obtenidos correctamente: {}", resultado);
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
-            log.error("❌ Error al obtener horarios: ", e);
+            log.error("Error al obtener horarios: ", e);
             Map<String, Object> error = new HashMap<>();
             error.put("exito", false);
             error.put("mensaje", "Error al obtener horarios: " + e.getMessage());
@@ -105,7 +106,7 @@ public class IAFuncionesController {
     @GetMapping("/citas/paciente/{pacienteId}")
     public ResponseEntity<Map<String, Object>> obtenerCitasPaciente(
             @PathVariable Long pacienteId) {
-        log.info("📡 API: Obteniendo citas del paciente: {}", pacienteId);
+        log.info("API: Obteniendo citas del paciente: {}", pacienteId);
         return ResponseEntity.ok(iaService.obtenerCitasPaciente(pacienteId));
     }
 
@@ -122,7 +123,7 @@ public class IAFuncionesController {
         Long agendaId = getLong(datos, "agendaId");
         String motivo = (String) datos.get("motivo");
         
-        log.info("📡 API: Creando cita (paciente: {}, médico: {})", pacienteId, medicoId);
+        log.info("API: Creando cita (paciente: {}, médico: {})", pacienteId, medicoId);
         
         return ResponseEntity.ok(
             iaService.crearCita(pacienteId, medicoId, servicioId, agendaId, motivo)
@@ -137,7 +138,7 @@ public class IAFuncionesController {
             @PathVariable Long citaId,
             @RequestParam Long pacienteId) {
         
-        log.info("📡 API: Cancelando cita: {}", citaId);
+        log.info("API: Cancelando cita: {}", citaId);
         return ResponseEntity.ok(iaService.cancelarCita(citaId, pacienteId));
     }
 
@@ -147,14 +148,15 @@ public class IAFuncionesController {
     @PostMapping("/agendar-cita")
     public ResponseEntity<Map<String, Object>> agendarCita(@RequestBody Map<String, Object> body) {
         Long pacienteId = getLong(body, "pacienteId");
+        Long usuarioId = getLong(body, "usuarioId"); // Nuevo parámetro opcional
         Long horarioId = getLong(body, "horarioId");
         Long servicioId = getLong(body, "servicioId");
         String motivo = (String) body.get("motivo");
         
-        log.info("📡 API: Agendando cita - Paciente: {}, Horario: {}, Servicio: {}", 
-                 pacienteId, horarioId, servicioId);
+        log.info("API: Agendando cita - Paciente: {}, Usuario: {}, Horario: {}, Servicio: {}", 
+                 pacienteId, usuarioId, horarioId, servicioId);
         
-        return ResponseEntity.ok(iaService.agendarCita(pacienteId, horarioId, servicioId, motivo));
+        return ResponseEntity.ok(iaService.agendarCita(pacienteId, usuarioId, horarioId, servicioId, motivo));
     }
 
     /**
@@ -162,7 +164,7 @@ public class IAFuncionesController {
      */
     @GetMapping("/paciente/{usuarioId}")
     public ResponseEntity<Map<String, Object>> obtenerDatosPaciente(@PathVariable Long usuarioId) {
-        log.info("📡 API: Obteniendo datos del paciente (usuario: {})", usuarioId);
+        log.info("API: Obteniendo datos del paciente (usuario: {})", usuarioId);
         return ResponseEntity.ok(iaService.obtenerDatosPaciente(usuarioId));
     }
 
