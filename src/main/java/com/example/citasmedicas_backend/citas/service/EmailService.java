@@ -257,4 +257,77 @@ public class EmailService {
 
         enviarEmailHtml(emailPaciente, asunto, html.toString());
     }
+
+    /**
+     * Genera y envía un correo al médico notificando sobre una nueva cita pendiente
+     */
+    public void notificarNuevaCitaMedico(String emailMedico, String nombreMedico, String nombrePaciente,
+                                         String especialidad, String fechaCita, String motivo) throws MessagingException {
+        String asunto = "📋 Nueva cita pendiente - MediCitas";
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html>");
+        html.append("<html lang=\"es\">");
+        html.append("<head>");
+        html.append("<meta charset=\"UTF-8\">");
+        html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+        html.append("<title>").append(asunto).append("</title>");
+        html.append("<style>");
+        html.append("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }");
+        html.append(".container { max-width: 600px; margin: 40px auto; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }");
+        html.append(".header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; }");
+        html.append(".content { padding: 30px; }");
+        html.append(".estado { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 20px 0; background-color: #fef3c7; color: #d97706; }");
+        html.append(".info-box { background-color: #f9fafb; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 8px; }");
+        html.append(".btn { display: inline-block; padding: 12px 24px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 5px; }");
+        html.append(".btn:hover { background-color: #d97706; }");
+        html.append(".footer { background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; }");
+        html.append("</style>");
+        html.append("</head>");
+        html.append("<body>");
+
+        html.append("<div class=\"container\">");
+        html.append("<div class=\"header\">");
+        html.append("<h1>📋 Nueva Cita Pendiente</h1>");
+        html.append("<p>Hola ").append(nombreMedico).append(", tienes una nueva cita pendiente de revisión</p>");
+        html.append("</div>");
+
+        html.append("<div class=\"content\">");
+        html.append("<div class=\"estado\">PENDIENTE DE REVISIÓN</div>");
+
+        html.append("<div class=\"info-box\">");
+        html.append("<h3>Detalles de la Cita:</h3>");
+        html.append("<p><strong>Paciente:</strong> ").append(nombrePaciente).append("</p>");
+        html.append("<p><strong>Servicio:</strong> ").append(especialidad).append("</p>");
+        html.append("<p><strong>Fecha y Hora:</strong> ").append(fechaCita).append("</p>");
+        if (motivo != null && !motivo.trim().isEmpty()) {
+            html.append("<p><strong>Motivo:</strong> ").append(motivo).append("</p>");
+        }
+        html.append("</div>");
+
+        html.append("<p>Por favor, revisa esta cita en tu panel de médico y decide si:</p>");
+        html.append("<ul>");
+        html.append("<li><strong>Aceptar</strong> la cita en la fecha programada</li>");
+        html.append("<li><strong>Rechazar</strong> la cita (se notificará al paciente)</li>");
+        html.append("<li><strong>Reprogramar</strong> para otra fecha/hora disponible</li>");
+        html.append("</ul>");
+
+        html.append("<div style=\"text-align: center; margin: 30px 0;\">");
+        html.append("<a href=\"#\" class=\"btn\">Revisar Cita</a>");
+        html.append("</div>");
+
+        html.append("</div>");
+
+        html.append("<div class=\"footer\">");
+        html.append("<p>Esta es una notificación automática del sistema MediCitas</p>");
+        html.append("<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;\">");
+        html.append("<p style=\"margin: 0; font-size: 12px; color: #9ca3af;\">&copy; 2025 MediCitas. Todos los derechos reservados.</p>");
+        html.append("</div>");
+
+        html.append("</div>");
+        html.append("</body>");
+        html.append("</html>");
+
+        enviarEmailHtml(emailMedico, asunto, html.toString());
+    }
 }

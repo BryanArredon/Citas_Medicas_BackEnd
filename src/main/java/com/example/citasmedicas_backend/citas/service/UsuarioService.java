@@ -45,6 +45,16 @@ public class UsuarioService {
     logger.info("=== INICIANDO GUARDADO DE USUARIO ===");
     logger.info("Usuario a guardar: nombre={}, email={}", usuario.getNombre(), usuario.getCorreoElectronico());
 
+    // Verificar si el correo electrónico ya existe
+    if (usuario.getCorreoElectronico() != null && !usuario.getCorreoElectronico().trim().isEmpty()) {
+        Optional<Usuario> existingUser = usuarioRepository.findByCorreoElectronico(usuario.getCorreoElectronico());
+        if (existingUser.isPresent()) {
+            String error = "El correo electrónico '" + usuario.getCorreoElectronico() + "' ya está registrado";
+            logger.error("❌ Error: {}", error);
+            throw new RuntimeException(error);
+        }
+    }
+
     // ... código existente para resolver rol ...
 
     // Save usuario first
@@ -67,8 +77,7 @@ public class UsuarioService {
         }
     }
 
-    // ❌ ELIMINAR O COMENTAR ESTE BLOQUE - La creación de médico se hará después
-    /*
+    
     // Si el usuario es médico, crear la entidad Medico y sus horarios
     if (rol != null && (rol.getIdRol() == 2 || "MEDICO".equalsIgnoreCase(rol.getNombreRol()))) {
         logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
@@ -90,7 +99,7 @@ public class UsuarioService {
             throw new RuntimeException(error, e);
         }
     }
-    */
+    
 
     logger.info("=== GUARDADO DE USUARIO COMPLETADO ===");
     return saved;

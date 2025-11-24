@@ -153,10 +153,13 @@ public class IAFuncionesController {
         Long servicioId = getLong(body, "servicioId");
         String motivo = (String) body.get("motivo");
         
+        // Extraer datos de pago si están presentes
+        Map<String, Object> pagoData = (Map<String, Object>) body.get("pago");
+        
         log.info("API: Agendando cita - Paciente: {}, Usuario: {}, Horario: {}, Servicio: {}", 
                  pacienteId, usuarioId, horarioId, servicioId);
         
-        return ResponseEntity.ok(iaService.agendarCita(pacienteId, usuarioId, horarioId, servicioId, motivo));
+        return ResponseEntity.ok(iaService.agendarCita(pacienteId, usuarioId, horarioId, servicioId, motivo, pagoData));
     }
 
     /**
@@ -166,6 +169,29 @@ public class IAFuncionesController {
     public ResponseEntity<Map<String, Object>> obtenerDatosPaciente(@PathVariable Long usuarioId) {
         log.info("API: Obteniendo datos del paciente (usuario: {})", usuarioId);
         return ResponseEntity.ok(iaService.obtenerDatosPaciente(usuarioId));
+    }
+
+    /**
+     * Procesa el pago de una cita pendiente
+     */
+    @PostMapping("/procesar-pago")
+    public ResponseEntity<Map<String, Object>> procesarPago(@RequestBody Map<String, Object> datos) {
+        Long citaId = getLong(datos, "citaId");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> pagoData = (Map<String, Object>) datos.get("pagoData");
+        
+        log.info("API: Procesando pago para cita: {}", citaId);
+        try {
+            Map<String, Object> resultado = iaService.procesarPago(citaId, pagoData);
+            log.info("Pago procesado correctamente: {}", resultado);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            log.error("Error procesando pago: ", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("exito", false);
+            error.put("mensaje", "Error procesando pago: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
     }
 
     /**

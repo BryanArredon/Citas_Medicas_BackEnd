@@ -73,7 +73,16 @@ public class UsuarioController {
         }
 
         System.out.println("Guardando usuario...");
-        Usuario saved = usuarioService.save(usuario);
+        Usuario saved;
+        try {
+            saved = usuarioService.save(usuario);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("ya está registrado")) {
+                System.out.println("❌ ERROR: " + e.getMessage());
+                return ResponseEntity.status(409).body(null); // 409 Conflict
+            }
+            throw e; // Re-throw other exceptions
+        }
         System.out.println("Usuario guardado exitosamente con ID: " + saved.getIdUsuario());
 
         // Verificar que el usuario existe en la base de datos
