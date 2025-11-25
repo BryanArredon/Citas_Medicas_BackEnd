@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Base64;
 
 /**
  * Servicio que expone funciones para que la IA las llame
@@ -620,6 +619,14 @@ public class IAAssistantService {
             
             Agenda horario = horarioOpt.get();
             
+            // Verificar que el horario tenga médico asignado
+            if (horario.getMedico() == null) {
+                log.error("El horario {} no tiene médico asignado", horarioId);
+                return Map.of("exito", false, "mensaje", "El horario no tiene médico asignado");
+            }
+            
+            log.info("Horario encontrado: ID {}, Médico: {}", horarioId, horario.getMedico().getId());
+            
             // Validar servicio
             Optional<Servicio> servicioOpt = servicioRepository.findById(servicioId);
             if (servicioOpt.isEmpty()) {
@@ -673,7 +680,7 @@ public class IAAssistantService {
                     
                     // Cambiar estatus a CONFIRMADO si el pago fue exitoso
                     Optional<Estatus> estatusConfirmado = estatusRepository.findAll().stream()
-                        .filter(e -> "Confirmado".equalsIgnoreCase(e.getEstatus()))
+                        .filter(e -> "Aceptada".equalsIgnoreCase(e.getEstatus()))
                         .findFirst();
                     
                     if (estatusConfirmado.isPresent()) {
@@ -682,8 +689,57 @@ public class IAAssistantService {
                     
                     log.info("Pago procesado exitosamente para cita IA");
                     
-                    // El comprobante PDF se enviará cuando el médico acepte la cita
-                    // No enviar inmediatamente
+                    // Enviar comprobante de pago inmediatamente al paciente
+                    try {
+                        log.info("=== ENVIANDO COMPROBANTE DE PAGO INMEDIATO ===");
+                        String emailPaciente = paciente.getUsuario().getCorreoElectronico();
+                        String nombrePaciente = paciente.getUsuario().getNombre() + " " + paciente.getUsuario().getApellidoPaterno();
+                        
+                        String asunto = String.format("Comprobante de Pago - Cita Médica Confirmada #%s", nuevaCita.getId());
+                        String mensaje = String.format(
+                            "Estimado %s,\n\n" +
+                            "Su pago ha sido procesado exitosamente.\n\n" +
+                            "DETALLES DE LA CITA:\n" +
+                            "- ID de Cita: %s\n" +
+                            "- Servicio: %s\n" +
+                            "- Médico: %s %s\n" +
+                            "- Fecha: %s\n" +
+                            "- Hora: %s - %s\n" +
+                            "- Monto pagado: $%.2f\n" +
+                            "- Estado: CONFIRMADA\n\n" +
+                            "Adjunto encontrará el comprobante oficial de su pago.\n\n" +
+                            "Gracias por utilizar MediCitas.\n\n" +
+                            "Atentamente,\n" +
+                            "Equipo de MediCitas",
+                            nombrePaciente,
+                            nuevaCita.getId(),
+                            servicio.getNombreServicio(),
+                            horario.getMedico().getUsuario().getNombre(),
+                            horario.getMedico().getUsuario().getApellidoPaterno(),
+                            horario.getFecha().toLocalDate().toString(),
+                            horario.getHoraInicio().toString(),
+                            horario.getHoraFin().toString(),
+                            servicio.getCosto()
+                        );
+                        
+                        // Generar el PDF del comprobante
+                        log.info("Generando comprobante PDF para cita IA ID: {}", nuevaCita.getId());
+                        byte[] pdfComprobante = comprobanteService.generarComprobantePDF(nuevaCita);
+                        log.info("PDF generado exitosamente. Tamaño: {} bytes", pdfComprobante.length);
+                        
+                        // Nombre del archivo PDF
+                        String nombreArchivoPdf = String.format("Comprobante_Cita_%s.pdf", nuevaCita.getId());
+                        log.info("Nombre del archivo PDF: {}", nombreArchivoPdf);
+                        
+                        // Enviar email con el PDF adjunto
+                        log.info("Enviando email a: {} con comprobante adjunto", emailPaciente);
+                        emailService.enviarEmailConAdjunto(emailPaciente, asunto, mensaje, pdfComprobante, nombreArchivoPdf);
+                        log.info("=== COMPROBANTE DE PAGO ENVIADO EXITOSAMENTE ===");
+                        
+                    } catch (Exception emailEx) {
+                        log.error("Error enviando comprobante de pago inmediato: {}", emailEx.getMessage());
+                        // No fallar la operación por error de email
+                    }
                     
                 } catch (Exception e) {
                     log.error("Error procesando pago para cita IA: {}", e.getMessage());
@@ -693,15 +749,19 @@ public class IAAssistantService {
             
             // Guardar la cita
             Cita citaGuardada = citaRepository.save(nuevaCita);
+            log.info("Cita guardada con ID: {}, Médico: {}, EstadoPago: {}, Estatus: {}", 
+                     citaGuardada.getId(), 
+                     citaGuardada.getMedico() != null ? citaGuardada.getMedico().getId() : "null",
+                     citaGuardada.getEstadoPago(),
+                     citaGuardada.getEstatus() != null ? citaGuardada.getEstatus().getEstatus() : "null");
             
-            // Solo eliminar el horario si la cita queda PENDIENTE (sin pago)
-            // Si la cita está CONFIRMADA (con pago), mantener el horario para que aparezca en la agenda del médico
-            if ("PENDIENTE".equals(citaGuardada.getEstadoPago())) {
-                agendaRepository.delete(horario);
-                log.info("Horario eliminado de agenda - cita pendiente requiere confirmación médica");
-            } else {
-                log.info("Horario mantenido en agenda - cita confirmada con pago");
-            }
+            // Asociar la agenda a todas las citas para que aparezcan en el calendario del médico
+            // El médico podrá aceptar, cancelar o posponer las citas desde su agenda
+            citaGuardada.setAgenda(horario);
+            citaRepository.save(citaGuardada);
+            
+            // No eliminar la agenda, mantenerla para que el médico pueda gestionar todas las citas
+            log.info("Agenda mantenida para cita - médico puede gestionar desde calendario");
             
             log.info("Cita agendada exitosamente: ID {}", citaGuardada.getId());
             
@@ -932,4 +992,40 @@ public class IAAssistantService {
             "</html>";
     }
 
+    /* 
+@Transactional
+public Map<String, Object> agendarCita
+                            (Long pacienteId, 
+                            Long usuarioId, 
+                            Long horarioId, 
+                            Long servicioId, 
+                            String motivo, 
+        Map<String, Object> pagoData) {
+    
+    // 1. SUBSISTEMA: Validar paciente (PacienteRepository)
+    PacienteDetalle paciente = pacienteRepository.findByUsuarioIdUsuario(usuarioId);
+    
+    // 2. SUBSISTEMA: Validar horario (AgendaRepository)  
+    Optional<Agenda> horarioOpt = agendaRepository.findById(horarioId);
+    
+    // 3. SUBSISTEMA: Validar servicio (ServicioRepository)
+    Optional<Servicio> servicioOpt = servicioRepository.findById(servicioId);
+    
+    // 4. SUBSISTEMA: Crear cita (CitaRepository)
+    Cita nuevaCita = new Cita();
+    nuevaCita.setPaciente(paciente);
+    nuevaCita.setMedico(horario.getMedico());
+    nuevaCita.setServicio(servicio);
+    Cita citaGuardada = citaRepository.save(nuevaCita);
+    
+    // 5. SUBSISTEMA: Procesar pago y enviar email (EmailService, ComprobanteService)
+    if (pagoData != null) {
+        emailService.enviarEmail(...);
+    }
+    
+    // Retorna respuesta simplificada al cliente
+    return Map.of("exito", true, "citaId", citaGuardada.getId(), ...);
+    
+    }
+        */
 }
