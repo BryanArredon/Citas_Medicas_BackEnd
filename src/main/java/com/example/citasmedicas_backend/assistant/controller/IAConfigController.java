@@ -19,10 +19,10 @@ public class IAConfigController {
 
     private static final Logger log = LoggerFactory.getLogger(IAConfigController.class);
 
-    @Value("${openai.api-key}")
+    @Value("${openai.api-key:}")
     private String apiKey;
 
-    @Value("${openai.assistant-id}")
+    @Value("${openai.assistant-id:}")
     private String assistantId;
 
     /**
@@ -33,11 +33,11 @@ public class IAConfigController {
         log.info("API: Solicitando configuración de OpenAI");
         
         Map<String, String> config = new HashMap<>();
-        config.put("apiKey", apiKey);
-        config.put("assistantId", assistantId);
+        config.put("apiKey", apiKey != null ? apiKey : "");
+        config.put("assistantId", assistantId != null ? assistantId : "");
         
-        log.info("Configuración proporcionada (API Key: {}...)", 
-                 apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) : "N/A");
+        boolean hasApiKey = apiKey != null && !apiKey.trim().isEmpty();
+        log.info("Configuración proporcionada (API Key configurada: {})", hasApiKey);
         
         return ResponseEntity.ok(config);
     }

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.citasmedicas_backend.citas.model.EstadoMedico;
 import com.example.citasmedicas_backend.citas.model.HorarioMedico;
 import com.example.citasmedicas_backend.citas.model.Medico;
+import com.example.citasmedicas_backend.citas.model.Servicio;
+import com.example.citasmedicas_backend.citas.model.Usuario;
 import com.example.citasmedicas_backend.citas.repository.MedicoRepository;
 
 @Service
@@ -28,7 +31,7 @@ public class MedicoService {
     @Transactional(rollbackFor = Exception.class)
     public Medico createMedico(Medico medico) {
         logger.info("Iniciando creación de médico");
-        
+
         // 1. Validaciones mínimas: requiere usuario; servicio puede asignarlo el admin más tarde
         if (medico.getUsuario() == null) {
             String error = "Medico requiere usuario";
@@ -38,21 +41,60 @@ public class MedicoService {
 
         // 2. Persistir médico
         try {
-            logger.info("Guardando médico: usuario={}, servicio={}", 
+            logger.info("Guardando médico: usuario={}, servicio={}",
                 medico.getUsuario().getIdUsuario(),
                 medico.getServicio() != null ? medico.getServicio().getId() : "(sin servicio)");
-                
+
             Medico saved = medicoRepository.save(medico);
             logger.info("Médico guardado con id={}", saved.getId());
-            
+
             // 3. Crear horarios por defecto
             LocalDate today = LocalDate.now();
             createDefaultHorarios(saved, today);
-            
+
             return saved;
-            
+
         } catch (Exception e) {
             String error = "Error al crear médico: " + e.getMessage();
+            logger.error(error, e);
+            throw new RuntimeException(error, e);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Medico updateMedico(Medico medico) {
+        logger.info("Actualizando médico existente: id={}", medico.getId());
+
+        // 1. Validaciones mínimas
+        if (medico.getId() == null) {
+            String error = "ID de médico requerido para actualización";
+            logger.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        // 2. Verificar que el médico existe
+        Medico existing = medicoRepository.findById(medico.getId()).orElse(null);
+        if (existing == null) {
+            String error = "Médico no encontrado con ID: " + medico.getId();
+            logger.error(error);
+            throw new IllegalArgumentException(error);
+        }
+
+        // 3. Actualizar solo los campos permitidos (sin crear horarios)
+        try {
+            logger.info("Actualizando médico: id={}, cedula={}",
+                medico.getId(), medico.getCedulaProfecional());
+
+            existing.setCedulaProfecional(medico.getCedulaProfecional());
+            // No actualizar servicio aquí, se maneja por separado
+
+            Medico saved = medicoRepository.save(existing);
+            logger.info("Médico actualizado exitosamente: id={}", saved.getId());
+
+            return saved;
+
+        } catch (Exception e) {
+            String error = "Error al actualizar médico: " + e.getMessage();
             logger.error(error, e);
             throw new RuntimeException(error, e);
         }
@@ -65,33 +107,28 @@ public class MedicoService {
 
     @Transactional(rollbackFor = Exception.class)
     protected void createDefaultHorarios(Medico medico, LocalDate fecha) {
-        logger.info("Creando horarios por defecto para médico id={}, fecha={}", medico.getId(), fecha);
+        logger.info("Creando horario por defecto para médico id={}, fecha={}", medico.getId(), fecha);
         
         try {
-            // Crear 8 franjas horarias de 1 hora
-            LocalTime startTime = LocalTime.of(9, 0);
-            List<HorarioMedico> horarios = new ArrayList<>();
+            // Primero, eliminar cualquier horario existente para este médico
+            logger.info("Eliminando horarios existentes para médico id={}", medico.getId());
+            horarioMedicoService.deleteByMedicoId(medico.getId());
             
-            for (int i = 0; i < 8; i++) {
-                HorarioMedico horario = new HorarioMedico();
-                horario.setMedico(medico);
-                horario.setFecha(fecha);
-                horario.setHorarioInicio(startTime.plusHours(i));
-                horario.setHorarioFin(startTime.plusHours(i + 1));
-                horario.setDuracion(60);
-                horario.setEstadoMedico(EstadoMedico.DISPONIBLE);
-                horarios.add(horario);
-            }
-
-            // Guardar todos los horarios
-            for (HorarioMedico horario : horarios) {
-                horarioMedicoService.save(horario);
-            }
+            // Crear un horario único para el día completo
+            HorarioMedico horario = new HorarioMedico();
+            horario.setMedico(medico);
+            horario.setFecha(fecha);
+            horario.setHorarioInicio(LocalTime.of(9, 0));
+            horario.setHorarioFin(LocalTime.of(17, 0));
+            horario.setDuracion(60); // 60 minutos por cita
+            horario.setEstadoMedico(EstadoMedico.DISPONIBLE);
             
-            logger.info("Creados {} horarios para médico id={}", horarios.size(), medico.getId());
+            horarioMedicoService.save(horario);
+            
+            logger.info("Creado horario único para médico id={}", medico.getId());
             
         } catch (Exception e) {
-            String error = "Error al crear horarios para médico id=" + medico.getId() + ": " + e.getMessage();
+            String error = "Error al crear horario para médico id=" + medico.getId() + ": " + e.getMessage();
             logger.error(error, e);
             throw new RuntimeException(error, e);
         }
@@ -111,6 +148,44 @@ public class MedicoService {
 
     public Medico findByUsuarioCorreo(String correo) {
         return medicoRepository.findByUsuario_CorreoElectronico(correo);
+    }
+
+    public List<Medico> createMedicoWithServices(Usuario usuario, List<Servicio> servicios, String cedula) {
+        logger.info("Creando médico con múltiples servicios para usuario id={}, servicios={}", usuario.getIdUsuario(), servicios.size());
+        
+        List<Medico> medicosCreados = new ArrayList<>();
+        
+        if (servicios.isEmpty()) {
+            // Crear un médico sin servicio asignado
+            Medico medico = new Medico();
+            medico.setUsuario(usuario);
+            medico.setServicio(null);
+            medico.setCedulaProfecional(cedula);
+            Medico creado = createMedico(medico);
+            medicosCreados.add(creado);
+        } else {
+            // Crear un registro por cada servicio
+            for (Servicio servicio : servicios) {
+                Medico medico = new Medico();
+                medico.setUsuario(usuario);
+                medico.setServicio(servicio);
+                medico.setCedulaProfecional(cedula);
+                Medico creado = createMedico(medico);
+                medicosCreados.add(creado);
+            }
+        }
+        
+        logger.info("Creados {} registros de médico", medicosCreados.size());
+        return medicosCreados;
+    }
+
+    public List<Servicio> getServiciosByUsuarioId(Long usuarioId) {
+        List<Medico> medicos = findAllByUsuario_Id(usuarioId);
+        return medicos.stream()
+            .filter(m -> m.getServicio() != null)
+            .map(Medico::getServicio)
+            .distinct()
+            .collect(Collectors.toList());
     }
 
     public List<Medico> findAllByUsuario_Id(Long usuarioId) {

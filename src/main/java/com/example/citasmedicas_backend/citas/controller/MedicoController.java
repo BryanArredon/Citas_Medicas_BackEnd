@@ -43,6 +43,16 @@ public class MedicoController {
     @Autowired
     private ServicioRepository servicioRepository;
 
+    @GetMapping("/usuario/{usuarioId}/servicios")
+    public ResponseEntity<List<Servicio>> getServiciosByUsuario(@PathVariable Long usuarioId) {
+        try {
+            List<Servicio> servicios = medicoService.getServiciosByUsuarioId(usuarioId);
+            return ResponseEntity.ok(servicios);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @PostMapping("/con-servicios")
     public ResponseEntity<?> createMedicoWithServices(@RequestBody MedicoCreateDTO medicoDTO) {
         try {
@@ -238,7 +248,7 @@ public ResponseEntity<?> updateMedicoWithServices(
         for (Medico medico : medicosExistentes) {
             if (medico.getServicio() != null && serviciosAMantener.contains(medico.getServicio().getId())) {
                 medico.setCedulaProfecional(medicoDTO.getCedulaProfecional());
-                medicoService.createMedico(medico);
+                medicoService.updateMedico(medico); // Usar updateMedico en lugar de createMedico
                 System.out.println("✏️ Actualizando cédula del servicio: " + medico.getServicio().getNombreServicio());
             }
         }
@@ -385,31 +395,35 @@ public ResponseEntity<?> updateMedicoWithServices(
         }
     }
 
-    // Obtener todos los registros de medico por usuario id
+    // Obtener información completa del médico por usuario id
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<?> findByUsuarioId(@PathVariable("usuarioId") Long usuarioId) {
+    public ResponseEntity<Map<String, Object>> getMedicoByUsuarioId(@PathVariable Long usuarioId) {
         try {
-            System.out.println("🔍 Buscando médicos del usuario ID: " + usuarioId);
+            System.out.println("🔍 Obteniendo información de médico para usuario ID: " + usuarioId);
             
-            // Buscar todos los registros de este usuario
-            List<Medico> medicos = medicoService.getAllMedicos().stream()
-                .filter(m -> m.getUsuario() != null && m.getUsuario().getIdUsuario().equals(usuarioId))
-                .collect(Collectors.toList());
-            
-            if (medicos.isEmpty()) {
-                System.out.println("⚠️ No se encontraron registros para usuario ID: " + usuarioId);
+            Usuario usuario = usuarioService.findById(usuarioId);
+            if (usuario == null) {
+                System.out.println("❌ Usuario no encontrado con ID: " + usuarioId);
                 return ResponseEntity.notFound().build();
             }
+
+            List<Servicio> servicios = medicoService.getServiciosByUsuarioId(usuarioId);
+            System.out.println("✅ Servicios encontrados: " + servicios.size());
+            servicios.forEach(s -> System.out.println("  - " + s.getNombreServicio() + " (ID: " + s.getId() + ")"));
             
-            System.out.println("✅ Encontrados " + medicos.size() + " registros para el usuario");
-            
-            // Retornar el primer médico encontrado
-            return ResponseEntity.ok(medicos.get(0));
-            
+            String cedula = "AUTO-" + usuarioId; // Default cedula
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuario", usuario);
+            response.put("servicios", servicios);
+            response.put("cedulaProfesional", cedula);
+
+            System.out.println("📤 Respuesta completa preparada para enviar");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("❌ Error al buscar médicos del usuario: " + e.getMessage());
+            System.err.println("❌ Error: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Error al buscar médicos del usuario: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -446,5 +460,34 @@ public ResponseEntity<?> updateMedicoWithServices(
             .filter(m -> m.getServicio() != null && m.getServicio().getId().equals(servicioId))
             .toList();
         return ResponseEntity.ok(medicosPorServicio);
+    }
+
+    // Nuevo endpoint para obtener registros de médicos por usuario (incluyendo IDs)
+    @GetMapping("/registros/usuario/{usuarioId}")
+    public ResponseEntity<List<Medico>> getMedicosRegistrosByUsuario(@PathVariable Long usuarioId) {
+        try {
+            System.out.println("🔍 Obteniendo registros de médicos para usuario ID: " + usuarioId);
+            
+            List<Medico> medicos = medicoService.findAllByUsuario_Id(usuarioId);
+            
+            System.out.println("📋 Registros encontrados: " + medicos.size());
+            for (Medico medico : medicos) {
+                System.out.println("  - Médico ID: " + medico.getId() + 
+                                   ", Usuario: " + medico.getUsuario().getNombre() + 
+                                   ", Servicio: " + (medico.getServicio() != null ? medico.getServicio().getNombreServicio() : "Sin servicio"));
+            }
+            
+            if (medicos.isEmpty()) {
+                System.out.println("⚠️ No se encontraron registros de médico para el usuario " + usuarioId);
+                return ResponseEntity.ok(new ArrayList<>()); // Retornar lista vacía
+            }
+            
+            return ResponseEntity.ok(medicos);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al obtener registros de médicos: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

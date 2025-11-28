@@ -189,6 +189,10 @@ public class CitaService {
             if (citaGuardada.getIdPago() != null && citaGuardada.getMontoPagado() != null) {
                 log.info("Generando comprobante PDF para cita aceptada ID: {}", citaGuardada.getId());
                 enviarComprobantePDF(citaGuardada);
+                } else if ("PAGADO".equals(citaGuardada.getEstadoPago())) {
+                // Caso especial: cita del chatbot con pago pero sin idPago
+                log.info("Generando comprobante PDF para cita del chatbot aceptada ID: {}", citaGuardada.getId());
+                enviarComprobantePDF(citaGuardada);
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error al enviar email: " + e.getMessage());
@@ -1000,4 +1004,6 @@ public class CitaService {
         
         return cita;
     }
+
+
 }

@@ -16,7 +16,7 @@ public class ServicioService {
         return servicioRepository.save(servicio);
     }
 
-    public List<Servicio> getAllServicios() {
-        return servicioRepository.findAll();
+    public Servicio findById(Long id) {
+        return servicioRepository.findById(id).orElse(null);
     }
 }

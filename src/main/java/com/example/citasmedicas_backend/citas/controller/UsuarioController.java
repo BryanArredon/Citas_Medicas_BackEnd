@@ -1,5 +1,6 @@
 package com.example.citasmedicas_backend.citas.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.citasmedicas_backend.citas.model.RolUser;
+import com.example.citasmedicas_backend.citas.model.Servicio;
 import com.example.citasmedicas_backend.citas.model.Usuario;
 import com.example.citasmedicas_backend.citas.repository.RolUserRepository;
 import com.example.citasmedicas_backend.citas.service.EmailService;
+import com.example.citasmedicas_backend.citas.service.MedicoService;
+import com.example.citasmedicas_backend.citas.service.ServicioService;
 import com.example.citasmedicas_backend.citas.service.UsuarioService;
 
 import jakarta.mail.MessagingException;
@@ -34,6 +38,12 @@ public class UsuarioController {
 
     @Autowired
     private RolUserRepository rolUserRepository;
+
+    @Autowired
+    private MedicoService medicoService;
+
+    @Autowired
+    private ServicioService servicioService;
 
 
 
@@ -106,6 +116,76 @@ public class UsuarioController {
         }
 
         System.out.println("=== REGISTRO COMPLETADO ===");
+        return ResponseEntity.ok(saved);
+    }
+    public ResponseEntity<Usuario> createMedico(@RequestBody RegistroMedicoDTO registro) {
+        System.out.println("=== INICIANDO REGISTRO DE MÉDICO ===");
+        System.out.println("Datos recibidos: usuario=" + registro.getUsuario() + ", servicios=" + registro.getServicioIds());
+
+        Usuario usuario = registro.getUsuario();
+        // ensure id is null
+        usuario.setIdUsuario(null);
+
+        // Set rol to MEDICO if not set
+        if (usuario.getRolUser() == null) {
+            RolUser rolMedico = rolUserRepository.findById(2L).orElse(null);
+            if (rolMedico != null) {
+                usuario.setRolUser(rolMedico);
+                System.out.println("Rol asignado: " + rolMedico.getNombreRol());
+            } else {
+                System.out.println("❌ ERROR: No se pudo encontrar el rol MEDICO");
+                return ResponseEntity.badRequest().build();
+            }
+        }
+
+        System.out.println("Guardando usuario...");
+        Usuario saved;
+        try {
+            saved = usuarioService.save(usuario);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("ya está registrado")) {
+                System.out.println("❌ ERROR: " + e.getMessage());
+                return ResponseEntity.status(409).body(null);
+            }
+            throw e;
+        }
+        System.out.println("Usuario guardado exitosamente con ID: " + saved.getIdUsuario());
+
+        // Asignar servicios al médico
+        if (registro.getServicioIds() != null && !registro.getServicioIds().isEmpty()) {
+            System.out.println("Asignando servicios al médico...");
+            try {
+                List<Servicio> servicios = new ArrayList<>();
+                for (Long id : registro.getServicioIds()) {
+                    Servicio s = servicioService.findById(id);
+                    if (s != null) {
+                        servicios.add(s);
+                    } else {
+                        System.out.println("⚠️ Servicio con ID " + id + " no encontrado, omitiendo");
+                    }
+                }
+                if (!servicios.isEmpty()) {
+                    medicoService.createMedicoWithServices(saved, servicios, "AUTO-" + saved.getIdUsuario());
+                    System.out.println("✅ Servicios asignados al médico");
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Error al asignar servicios: " + e.getMessage());
+                // No fallar el registro por esto
+            }
+        }
+
+        // Enviar email de bienvenida
+        System.out.println("Enviando email de bienvenida...");
+        try {
+            String nombreCompleto = saved.getNombre() + " " + saved.getApellidoPaterno();
+            String contenidoHtml = emailService.generarHtmlBienvenida(nombreCompleto, saved.getCorreoElectronico());
+            emailService.enviarEmailHtml(saved.getCorreoElectronico(), "Bienvenido a MediCitas", contenidoHtml);
+            System.out.println("✅ Email enviado exitosamente a: " + saved.getCorreoElectronico());
+        } catch (MessagingException e) {
+            System.err.println("❌ Error al enviar email de bienvenida: " + e.getMessage());
+        }
+
+        System.out.println("=== REGISTRO DE MÉDICO COMPLETADO ===");
         return ResponseEntity.ok(saved);
     }
 
@@ -181,4 +261,16 @@ class UsuarioRegistroDTO {
 
     public Long getIdRol() { return idRol; }
     public void setIdRol(Long idRol) { this.idRol = idRol; }
+}
+
+// DTO para el registro de médicos con servicios
+class RegistroMedicoDTO {
+    private Usuario usuario;
+    private List<Long> servicioIds;
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+
+    public List<Long> getServicioIds() { return servicioIds; }
+    public void setServicioIds(List<Long> servicioIds) { this.servicioIds = servicioIds; }
 }

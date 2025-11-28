@@ -49,9 +49,12 @@ public class UsuarioService {
     if (usuario.getCorreoElectronico() != null && !usuario.getCorreoElectronico().trim().isEmpty()) {
         Optional<Usuario> existingUser = usuarioRepository.findByCorreoElectronico(usuario.getCorreoElectronico());
         if (existingUser.isPresent()) {
-            String error = "El correo electrónico '" + usuario.getCorreoElectronico() + "' ya está registrado";
-            logger.error("❌ Error: {}", error);
-            throw new RuntimeException(error);
+            // Si es una actualización (usuario tiene ID), permitir el mismo correo para el mismo usuario
+            if (usuario.getIdUsuario() == null || !existingUser.get().getIdUsuario().equals(usuario.getIdUsuario())) {
+                String error = "El correo electrónico '" + usuario.getCorreoElectronico() + "' ya está registrado";
+                logger.error("❌ Error: {}", error);
+                throw new RuntimeException(error);
+            }
         }
     }
 
@@ -77,26 +80,34 @@ public class UsuarioService {
         }
     }
 
-    
     // Si el usuario es médico, crear la entidad Medico y sus horarios
     if (rol != null && (rol.getIdRol() == 2 || "MEDICO".equalsIgnoreCase(rol.getNombreRol()))) {
-        logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
+        logger.info("Verificando si existe registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
 
-        // No asignar servicio ni área automáticamente: lo hará el administrador.
-        // Solo crear la entidad Medico mínima vinculada al Usuario para que exista el registro;
-        // el admin asignará servicio/área y otros datos posteriormente.
-        Medico medico = new Medico();
-        medico.setUsuario(saved);
-        // No setServicio: lo decidirá el administrador
-        medico.setCedulaProfecional("AUTO-" + saved.getIdUsuario());
+        // Verificar si ya existe un médico para este usuario
+        List<Medico> medicosExistentes = medicoService.findAllByUsuario_Id(saved.getIdUsuario());
+        if (medicosExistentes.isEmpty()) {
+            // No existe médico, crear uno nuevo
+            logger.info("Creando registro de médico para usuario id={} nombre={}", saved.getIdUsuario(), saved.getNombre());
 
-        try {
-            medico = medicoService.createMedico(medico); // Este método crea los horarios
-            logger.info("✅ Médico creado exitosamente (sin servicio/área): id={}", medico.getId());
-        } catch (Exception e) {
-            String error = "❌ Error creando el médico: " + e.getMessage();
-            logger.error(error, e);
-            throw new RuntimeException(error, e);
+            // No asignar servicio ni área automáticamente: lo hará el administrador.
+            // Solo crear la entidad Medico mínima vinculada al Usuario para que exista el registro;
+            // el admin asignará servicio/área y otros datos posteriormente.
+            Medico medico = new Medico();
+            medico.setUsuario(saved);
+            // No setServicio: lo decidirá el administrador
+            medico.setCedulaProfecional("AUTO-" + saved.getIdUsuario());
+
+            try {
+                medico = medicoService.createMedico(medico); // Este método crea los horarios
+                logger.info("✅ Médico creado exitosamente (sin servicio/área): id={}", medico.getId());
+            } catch (Exception e) {
+                String error = "❌ Error creando el médico: " + e.getMessage();
+                logger.error(error, e);
+                throw new RuntimeException(error, e);
+            }
+        } else {
+            logger.info("Médico ya existe para usuario id={}, no se crea uno nuevo", saved.getIdUsuario());
         }
     }
     

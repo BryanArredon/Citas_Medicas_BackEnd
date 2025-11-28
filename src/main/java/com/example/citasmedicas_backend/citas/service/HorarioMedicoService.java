@@ -1,7 +1,6 @@
 package com.example.citasmedicas_backend.citas.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.citasmedicas_backend.citas.model.Agenda;
 import com.example.citasmedicas_backend.citas.model.EstadoMedico;
 import com.example.citasmedicas_backend.citas.model.HorarioMedico;
-import com.example.citasmedicas_backend.citas.repository.AgendaRepository;
 import com.example.citasmedicas_backend.citas.repository.HorarioMedicoRepository;
 
 @Service
@@ -23,15 +20,32 @@ public class HorarioMedicoService {
 
 	@Autowired
 	private HorarioMedicoRepository horarioMedicoRepository;
-	
-	@Autowired
-	private AgendaRepository agendaRepository;
 
 	// Create or update
 	@Transactional(propagation = Propagation.REQUIRED)
 	public HorarioMedico save(HorarioMedico horario) {
 		if (horario.getMedico() == null || horario.getMedico().getId() == null) {
 			throw new IllegalArgumentException("Horario requiere un médico persistido");
+		}
+
+		// ⚠️ VALIDACIÓN: Solo permitir UN horario por médico
+		// Si estamos creando un nuevo horario (sin ID), verificar que el médico no tenga ya uno
+		if (horario.getId() == null) {
+			long horariosExistentes = horarioMedicoRepository.countByMedicoId(horario.getMedico().getId());
+			if (horariosExistentes > 0) {
+				throw new IllegalStateException(
+					String.format(
+						"El médico con ID %d ya tiene un horario registrado. " +
+						"Solo se permite un horario por médico. " +
+						"Si desea modificarlo, use la opción de actualizar (PUT) en lugar de crear uno nuevo.",
+						horario.getMedico().getId()
+					)
+				);
+			}
+			System.out.println("✅ Validación exitosa: el médico no tiene horarios previos");
+		} else {
+			// Si estamos actualizando (tiene ID), permitir la operación
+			System.out.println("✅ Actualizando horario existente ID: " + horario.getId());
 		}
 
 		// Si no se proporcionó validUntil, fijarlo a fecha + 1 mes (o hoy +1 mes si fecha es null)
@@ -48,22 +62,11 @@ public class HorarioMedicoService {
 		// Guardar en horario_medico
 		HorarioMedico savedHorario = horarioMedicoRepository.save(horario);
 		
-		// También registrar en la tabla agenda
-		try {
-			Agenda agenda = new Agenda();
-			// Convertir LocalDate a LocalDateTime (fecha a medianoche)
-			LocalDateTime fechaDateTime = savedHorario.getFecha().atStartOfDay();
-			agenda.setFecha(fechaDateTime);
-			agenda.setHoraInicio(savedHorario.getHorarioInicio());
-			agenda.setHoraFin(savedHorario.getHorarioFin());
-			agenda.setMedico(savedHorario.getMedico());
-			
-			agendaRepository.save(agenda);
-			System.out.println("✅ Horario también registrado en tabla agenda: " + agenda.getId());
-		} catch (Exception e) {
-			System.err.println("⚠️ Error al registrar en tabla agenda: " + e.getMessage());
-			// No lanzar excepción para no afectar el guardado del horario principal
-		}
+		// ⚠️ NO REGISTRAR EN AGENDA AUTOMÁTICAMENTE
+		// La tabla 'agenda' es para CITAS AGENDADAS (slots ocupados)
+		// La tabla 'horario_medico' es para DISPONIBILIDAD del médico
+		// Solo se debe crear un registro en 'agenda' cuando un PACIENTE agende una cita
+		System.out.println("✅ Horario de disponibilidad guardado correctamente con ID: " + savedHorario.getId());
 
 		return savedHorario;
 	}
@@ -78,6 +81,11 @@ public class HorarioMedicoService {
 
 	public void deleteById(Long id) {
 		horarioMedicoRepository.deleteById(id);
+	}
+
+	@Transactional
+	public void deleteByMedicoId(Long medicoId) {
+		horarioMedicoRepository.deleteByMedicoId(medicoId);
 	}
 
 	// Reserve a horario: set estado to RESERVADO
@@ -105,21 +113,9 @@ public class HorarioMedicoService {
 		return horarioMedicoRepository.save(h);
 	}
 
-	// Find by medico id
+	// Find by medico id - ahora usando el método del repository
 	public List<HorarioMedico> findByMedicoId(Long medicoId) {
-		List<HorarioMedico> all = findAll();
-		List<HorarioMedico> res = new ArrayList<>();
-		for (HorarioMedico h : all) {
-			if (h.getMedico() != null) {
-				// use medico.getId() safely
-				try {
-					Long id = h.getMedico().getId();
-					if (id != null && id.equals(medicoId)) res.add(h);
-				} catch (Exception ignored) {
-				}
-			}
-		}
-		return res;
+		return horarioMedicoRepository.findByMedicoId(medicoId);
 	}
 
 	// Find by date

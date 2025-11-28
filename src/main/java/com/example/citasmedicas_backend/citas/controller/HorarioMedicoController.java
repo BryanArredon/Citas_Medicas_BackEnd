@@ -49,7 +49,8 @@ public class HorarioMedicoController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody HorarioMedico horario) {
         // Resolve medico reference if only id is provided in payload
-        logger.info("POST /api/horarios payload: {}", horario);
+        logger.info("POST /api/horarios - Intentando crear nuevo horario");
+        logger.info("Payload recibido: {}", horario);
         try {
             if (horario.getMedico() != null) {
                 Long mid = null;
@@ -111,9 +112,18 @@ public class HorarioMedicoController {
 
         try {
             HorarioMedico saved = service.save(horario);
+            logger.info("✅ Horario creado exitosamente con ID: {}", saved.getId());
             return ResponseEntity.ok(saved);
+        } catch (IllegalStateException ex) {
+            // Error de validación: médico ya tiene horario
+            logger.warn("❌ Validación fallida: {}", ex.getMessage());
+            return ResponseEntity.status(409).body(ex.getMessage()); // 409 Conflict
+        } catch (IllegalArgumentException ex) {
+            // Error de validación: datos inválidos
+            logger.warn("❌ Datos inválidos: {}", ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
         } catch (Exception ex) {
-            logger.error("Error guardando HorarioMedico", ex);
+            logger.error("❌ Error guardando HorarioMedico", ex);
             return ResponseEntity.status(500).body("Error interno al guardar horario: " + ex.getMessage());
         }
     }

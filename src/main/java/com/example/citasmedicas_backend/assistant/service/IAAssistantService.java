@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -326,103 +327,230 @@ public class IAAssistantService {
      * Obtiene próximos horarios disponibles de un médico (siguientes 30 días)
      * Si medicoId es null, devuelve horarios de TODOS los médicos
      */
+    /**
+     * Obtiene los próximos horarios disponibles de un médico
+     * LÓGICA CORRECTA:
+     * 1. Buscar en HORARIO_MEDICO la disponibilidad del médico (cuando puede atender)
+     * 2. EXPANDIR horarios según valid_until y duración de citas
+     * 3. Buscar en AGENDA las citas ya agendadas (horas ocupadas)
+     * 4. Retornar solo las horas LIBRES (disponibilidad - ocupadas)
+     */
     public Map<String, Object> obtenerProximosHorariosDisponibles(Long medicoId) {
-        log.info("IA solicitó próximos horarios del médico: {}", medicoId);
+        log.info("🤖 IA solicitó próximos horarios del médico ID: {}", medicoId);
         
         try {
             LocalDate hoy = LocalDate.now();
-            LocalDate finVentana = hoy.plusDays(30); // Extender a 30 días para encontrar más horarios
+            LocalDate finVentana = hoy.plusDays(30);
             
-            List<Map<String, Object>> horariosDisponibles = new ArrayList<>();
+            log.info("📅 Buscando horarios entre {} y {}", hoy, finVentana);
             
-            // Obtener todos los horarios de la agenda disponibles (filtrados por médico si se especifica)
-            List<Agenda> horarios = agendaRepository.findAll().stream()
-                .filter(a -> a != null && a.getFecha() != null && a.getHoraInicio() != null && a.getHoraFin() != null)
-                .filter(a -> medicoId == null || (a.getMedico() != null && a.getMedico().getId() != null && a.getMedico().getId().equals(medicoId)))
-                .filter(a -> {
-                    try {
-                        LocalDate fecha = a.getFecha().toLocalDate();
-                        // Incluir desde hoy en adelante hasta 30 días
-                        return !fecha.isBefore(hoy) && !fecha.isAfter(finVentana);
-                    } catch (Exception e) {
-                        log.warn("Error procesando fecha de agenda {}: {}", a.getId(), e.getMessage());
-                        return false;
-                    }
-                })
-                .sorted((a1, a2) -> a1.getFecha().compareTo(a2.getFecha())) // Ordenar por fecha
-                .collect(Collectors.toList());
-            
-            log.info("Encontrados {} horarios en agenda para médico {}", horarios.size(), medicoId);
-            
-            // Si no hay horarios en agenda, intentar generar desde HorarioMedico
-            if (horarios.isEmpty() && medicoId != null) {
-                log.info("No hay agendas específicas, intentando generar desde HorarioMedico para médico {}", medicoId);
-                horarios = generarHorariosDesdeHorarioMedico(medicoId, hoy, finVentana);
-                log.info("Generados {} horarios desde HorarioMedico", horarios.size());
+            // Verificar que el médico existe
+            if (medicoId != null) {
+                Optional<Medico> medicoOpt = medicoRepository.findById(medicoId);
+                if (!medicoOpt.isPresent()) {
+                    log.error("❌ Médico con ID {} no existe", medicoId);
+                    return Map.of(
+                        "exito", false,
+                        "mensaje", "El médico especificado no existe en el sistema.",
+                        "horarios", new ArrayList<>(),
+                        "total", 0
+                    );
+                }
+                String nombreMedico = medicoOpt.get().getUsuario() != null ? 
+                    (medicoOpt.get().getUsuario().getNombre() + " " + medicoOpt.get().getUsuario().getApellidoPaterno()).trim() : 
+                    "Desconocido";
+                log.info("✅ Médico encontrado: {} (ID: {})", nombreMedico, medicoId);
             }
-
-            for (Agenda horario : horarios) {
+            
+            // PASO 1: Buscar configuración de DISPONIBILIDAD en horario_medico
+            log.info("📋 PASO 1: Buscando configuración de horarios en horario_medico...");
+            List<HorarioMedico> configuracionHorarios = horarioMedicoRepository.findAll().stream()
+                .filter(h -> h.getMedico() != null && (medicoId == null || h.getMedico().getId().equals(medicoId)))
+                .collect(Collectors.toList());
+                
+            log.info("✅ Configuraciones de horario encontradas: {}", configuracionHorarios.size());
+            
+            // PASO 2: EXPANDIR horarios en slots individuales
+            log.info("🔄 PASO 2: Expandiendo horarios en slots de tiempo...");
+            List<Map<String, Object>> todosLosSlots = new ArrayList<>();
+            
+            for (HorarioMedico config : configuracionHorarios) {
                 try {
-                    Map<String, Object> horarioMap = new HashMap<>();
-                    horarioMap.put("horarioId", horario.getId());
-                    horarioMap.put("medicoId", horario.getMedico() != null && horario.getMedico().getId() != null ? horario.getMedico().getId() : null);
-
-                    // Obtener nombre del médico desde Usuario
-                    String medicoNombre = "Desconocido";
-                    if (horario.getMedico() != null && horario.getMedico().getUsuario() != null) {
-                        Usuario usuario = horario.getMedico().getUsuario();
-                        medicoNombre = (usuario.getNombre() != null ? usuario.getNombre() : "") + " " +
-                                      (usuario.getApellidoPaterno() != null ? usuario.getApellidoPaterno() : "");
-                        medicoNombre = medicoNombre.trim();
-                        if (medicoNombre.isEmpty()) {
-                            medicoNombre = "Desconocido";
+                    LocalDate fechaInicio = config.getFecha();
+                    LocalDate fechaFin = config.getValidUntil() != null ? config.getValidUntil() : fechaInicio;
+                    
+                    // Ajustar al rango de búsqueda
+                    if (fechaInicio.isBefore(hoy)) fechaInicio = hoy;
+                    if (fechaFin.isAfter(finVentana)) fechaFin = finVentana;
+                    
+                    log.debug("📅 Generando slots desde {} hasta {} para médico {}", 
+                        fechaInicio, fechaFin, config.getMedico().getId());
+                    
+                    // Generar slots para cada día en el rango
+                    LocalDate fechaActual = fechaInicio;
+                    while (!fechaActual.isAfter(fechaFin)) {
+                        // Generar slots de tiempo para este día
+                        LocalTime horaActual = config.getHorarioInicio();
+                        LocalTime horaFin = config.getHorarioFin();
+                        int duracionMinutos = config.getDuracion() != null ? config.getDuracion() : 30;
+                        
+                        while (horaActual.plusMinutes(duracionMinutos).isBefore(horaFin) || 
+                               horaActual.plusMinutes(duracionMinutos).equals(horaFin)) {
+                            
+                            Map<String, Object> slot = new HashMap<>();
+                            slot.put("horarioConfigId", config.getId());
+                            slot.put("medicoId", config.getMedico().getId());
+                            
+                            String medicoNombre = "Desconocido";
+                            if (config.getMedico().getUsuario() != null) {
+                                Usuario usuario = config.getMedico().getUsuario();
+                                medicoNombre = (usuario.getNombre() + " " + usuario.getApellidoPaterno()).trim();
+                            }
+                            slot.put("medicoNombre", medicoNombre);
+                            
+                            slot.put("fecha", fechaActual.toString());
+                            slot.put("diaSemana", fechaActual.getDayOfWeek().toString());
+                            slot.put("horaInicio", horaActual.toString());
+                            slot.put("horaFin", horaActual.plusMinutes(duracionMinutos).toString());
+                            slot.put("duracion", duracionMinutos);
+                            slot.put("estado", "DISPONIBLE");
+                            
+                            if (config.getMedico().getServicio() != null) {
+                                slot.put("servicioId", config.getMedico().getServicio().getId());
+                                slot.put("servicioNombre", config.getMedico().getServicio().getNombreServicio());
+                            }
+                            
+                            todosLosSlots.add(slot);
+                            
+                            horaActual = horaActual.plusMinutes(duracionMinutos);
                         }
+                        
+                        fechaActual = fechaActual.plusDays(1);
                     }
-                    horarioMap.put("medicoNombre", medicoNombre);
-
-                    horarioMap.put("fecha", horario.getFecha().toLocalDate().toString());
-                    horarioMap.put("diaSemana", horario.getFecha().toLocalDate().getDayOfWeek().toString());
-                    horarioMap.put("horaInicio", horario.getHoraInicio().toString());
-                    horarioMap.put("horaFin", horario.getHoraFin().toString());
-                    horarioMap.put("duracion", 60); // Duración por defecto de 60 minutos para agenda
-                    horarioMap.put("estado", "DISPONIBLE"); // Los horarios en agenda están disponibles
-
-                    // Agregar información del servicio asociado a este horario/médico
-                    if (horario.getMedico() != null && horario.getMedico().getServicio() != null) {
-                        horarioMap.put("servicioId", horario.getMedico().getServicio().getId());
-                        horarioMap.put("servicioNombre", horario.getMedico().getServicio().getNombreServicio());
-                    }
-
-                    horariosDisponibles.add(horarioMap);
                 } catch (Exception e) {
-                    log.error("Error procesando horario {}: {}", horario.getId(), e.getMessage());
+                    log.error("Error expandiendo horario {}: {}", config.getId(), e.getMessage());
+                }
+            }
+            
+            log.info("✅ Total de slots generados: {}", todosLosSlots.size());
+            
+            // PASO 3: Buscar CITAS AGENDADAS en agenda
+            log.info("📅 PASO 3: Buscando citas ya agendadas en agenda...");
+            List<Agenda> citasAgendadas = agendaRepository.findAll().stream()
+                .filter(a -> a.getFecha() != null && !a.getFecha().toLocalDate().isBefore(hoy) && !a.getFecha().toLocalDate().isAfter(finVentana))
+                .filter(a -> medicoId == null || (a.getMedico() != null && a.getMedico().getId().equals(medicoId)))
+                .collect(Collectors.toList());
+                
+            log.info("✅ Citas AGENDADAS encontradas: {}", citasAgendadas.size());
+            
+            // PASO 4: Filtrar slots LIBRES (disponibilidad - ocupadas)
+            log.info("🔍 PASO 4: Filtrando slots libres...");
+            List<Map<String, Object>> horariosLibres = new ArrayList<>();
+            
+            for (Map<String, Object> slot : todosLosSlots) {
+                try {
+                    String fechaStr = (String) slot.get("fecha");
+                    String horaInicioStr = (String) slot.get("horaInicio");
+                    Long slotMedicoId = (Long) slot.get("medicoId");
+                    
+                    LocalDate fechaSlot = LocalDate.parse(fechaStr);
+                    LocalTime horaSlot = LocalTime.parse(horaInicioStr);
+                    
+                    // Verificar si este slot está ocupado
+                    boolean estaOcupado = citasAgendadas.stream()
+                        .anyMatch(cita -> 
+                            cita.getMedico() != null &&
+                            cita.getMedico().getId().equals(slotMedicoId) &&
+                            cita.getFecha().toLocalDate().equals(fechaSlot) &&
+                            cita.getHoraInicio().equals(horaSlot)
+                        );
+                    
+                    if (!estaOcupado) {
+                        horariosLibres.add(slot);
+                    }
+                } catch (Exception e) {
+                    log.error("Error filtrando slot: {}", e.getMessage());
                 }
             }
 
-            log.info("Retornando {} horarios disponibles", horariosDisponibles.size());
+            log.info("📊 RESUMEN: {} slots generados, {} ocupados, {} LIBRES", 
+                todosLosSlots.size(), 
+                citasAgendadas.size(), 
+                horariosLibres.size());
 
-            // SI NO HAY HORARIOS FUTUROS, NO MOSTRAR FECHAS PASADAS
-            if (horariosDisponibles.isEmpty()) {
-                log.warn("No se encontraron horarios futuros disponibles para médico: {}", medicoId);
-                return Map.of(
-                    "exito", false,
-                    "mensaje", "No hay horarios disponibles en los próximos 30 días",
-                    "horarios", new ArrayList<>(),
-                    "total", 0,
-                    "periodo", "Próximos 30 días",
-                    "sugerencia", "Contacta directamente con el médico para agendar una cita"
-                );
+            // Mensajes según el caso
+            if (horariosLibres.isEmpty()) {
+                if (configuracionHorarios.isEmpty()) {
+                    // Caso 1: No tiene horarios configurados
+                    String mensaje = "No hay horarios configurados.";
+                    if (medicoId != null) {
+                        Optional<Medico> medicoOpt = medicoRepository.findById(medicoId);
+                        if (medicoOpt.isPresent()) {
+                            String nombreMedico = medicoOpt.get().getUsuario() != null ? 
+                                (medicoOpt.get().getUsuario().getNombre() + " " + medicoOpt.get().getUsuario().getApellidoPaterno()).trim() : 
+                                "este médico";
+                            
+                            mensaje = String.format(
+                                "El Dr(a). %s aún no tiene horarios de disponibilidad configurados.\n\n" +
+                                "**Acción requerida:**\n" +
+                                "El médico o el administrador debe configurar los horarios de atención en el sistema.\n\n" +
+                                "**Cómo configurar:**\n" +
+                                "1. Ir al panel de gestión de médicos\n" +
+                                "2. Configurar días y horas de atención\n" +
+                                "3. Guardar la disponibilidad\n\n" +
+                                "Una vez configurado, los pacientes podrán agendar citas.",
+                                nombreMedico
+                            );
+                        }
+                    }
+                    
+                    return Map.of(
+                        "exito", false,
+                        "mensaje", mensaje,
+                        "horarios", new ArrayList<>(),
+                        "total", 0,
+                        "razon", "SIN_HORARIOS_CONFIGURADOS"
+                    );
+                } else {
+                    // Caso 2: Tiene horarios pero todos están ocupados
+                    return Map.of(
+                        "exito", false,
+                        "mensaje", String.format(
+                            "Todos los horarios están ocupados en los próximos 30 días.\n\n" +
+                            "**Estadísticas:**\n" +
+                            "• Slots generados: %d\n" +
+                            "• Citas agendadas: %d\n" +
+                            "• Horarios libres: 0\n\n" +
+                            "**Sugerencias:**\n" +
+                            "• Intenta con fechas posteriores\n" +
+                            "• Consulta con otro médico de la misma especialidad\n" +
+                            "• Contacta al consultorio para más opciones",
+                            todosLosSlots.size(),
+                            citasAgendadas.size()
+                        ),
+                        "horarios", new ArrayList<>(),
+                        "total", 0,
+                        "razon", "TODOS_OCUPADOS",
+                        "slotsGenerados", todosLosSlots.size(),
+                        "citasAgendadas", citasAgendadas.size()
+                    );
+                }
             }
             
+            // ¡Hay horarios libres!
             return Map.of(
                 "exito", true,
-                "horarios", horariosDisponibles,
-                "total", horariosDisponibles.size(),
+                "horarios", horariosLibres,
+                "total", horariosLibres.size(),
                 "periodo", "Próximos 30 días",
-                "mensaje", medicoId == null ? "Horarios de todos los médicos" : "Horarios del médico solicitado"
+                "mensaje", "Horarios disponibles para agendar",
+                "slotsGenerados", todosLosSlots.size(),
+                "citasAgendadas", citasAgendadas.size(),
+                "horariosLibres", horariosLibres.size()
             );
+            
         } catch (Exception e) {
-            log.error("Error al obtener horarios disponibles: {}", e.getMessage(), e);
+            log.error("❌ Error al obtener horarios disponibles: {}", e.getMessage(), e);
             return Map.of(
                 "exito", false,
                 "mensaje", "Error al obtener horarios: " + e.getMessage(),
@@ -586,9 +714,9 @@ public class IAAssistantService {
      * @param pagoData Datos del pago (opcional, si es null se deja pendiente)
      */
     @Transactional
-    public Map<String, Object> agendarCita(Long pacienteId, Long usuarioId, Long horarioId, Long servicioId, String motivo, Map<String, Object> pagoData) {
-        log.info("IA solicitó agendar cita - PacienteID: {}, UsuarioID: {}, Horario: {}, Servicio: {}", 
-                 pacienteId, usuarioId, horarioId, servicioId);
+    public Map<String, Object> agendarCita(Long pacienteId, Long usuarioId, Long medicoId, String fecha, String horaInicio, String horaFin, Long servicioId, String motivo, Map<String, Object> pagoData) {
+        log.info("IA solicitó agendar cita - PacienteID: {}, UsuarioID: {}, Médico: {}, Fecha: {}, Hora: {}-{}, Servicio: {}", 
+                 pacienteId, usuarioId, medicoId, fecha, horaInicio, horaFin, servicioId);
         
         try {
             // Validar paciente
@@ -611,21 +739,14 @@ public class IAAssistantService {
                 return Map.of("exito", false, "mensaje", "Paciente no encontrado (ID: " + pacienteId + ", Usuario: " + usuarioId + ")");
             }
             
-            // Validar horario - ahora desde tabla agenda
-            Optional<Agenda> horarioOpt = agendaRepository.findById(horarioId);
-            if (horarioOpt.isEmpty()) {
-                return Map.of("exito", false, "mensaje", "Horario no encontrado en agenda");
+            // Validar médico
+            Optional<Medico> medicoOpt = medicoRepository.findById(medicoId);
+            if (medicoOpt.isEmpty()) {
+                return Map.of("exito", false, "mensaje", "Médico no encontrado");
             }
             
-            Agenda horario = horarioOpt.get();
-            
-            // Verificar que el horario tenga médico asignado
-            if (horario.getMedico() == null) {
-                log.error("El horario {} no tiene médico asignado", horarioId);
-                return Map.of("exito", false, "mensaje", "El horario no tiene médico asignado");
-            }
-            
-            log.info("Horario encontrado: ID {}, Médico: {}", horarioId, horario.getMedico().getId());
+            Medico medico = medicoOpt.get();
+            log.info("Médico encontrado: ID {}, Nombre: {}", medicoId, medico.getUsuario().getNombre());
             
             // Validar servicio
             Optional<Servicio> servicioOpt = servicioRepository.findById(servicioId);
@@ -635,23 +756,96 @@ public class IAAssistantService {
             
             Servicio servicio = servicioOpt.get();
             
+            // Validar fecha y hora
+            if (fecha == null || horaInicio == null || horaFin == null) {
+                return Map.of("exito", false, "mensaje", "Fecha y horas son requeridas");
+            }
+            
+            LocalDate fechaCita;
+            LocalTime horaInicioCita;
+            LocalTime horaFinCita;
+            
+            try {
+                fechaCita = LocalDate.parse(fecha);
+                horaInicioCita = LocalTime.parse(horaInicio);
+                horaFinCita = LocalTime.parse(horaFin);
+            } catch (Exception e) {
+                return Map.of("exito", false, "mensaje", "Formato de fecha u hora inválido");
+            }
+            
+            // Verificar que la fecha no sea en el pasado
+            if (fechaCita.isBefore(LocalDate.now())) {
+                return Map.of("exito", false, "mensaje", "No se pueden agendar citas en fechas pasadas");
+            }
+            
+            // Verificar que el horario esté dentro del horario del médico
+            List<HorarioMedico> horariosDelMedico = horarioMedicoRepository.findByMedicoId(medicoId);
+            if (horariosDelMedico.isEmpty()) {
+                return Map.of("exito", false, "mensaje", "El médico no tiene horario configurado");
+            }
+            
+            // Buscar el horario que aplica para esta fecha
+            HorarioMedico horarioAplicable = null;
+            for (HorarioMedico hm : horariosDelMedico) {
+                // Verificar si la fecha de la cita está dentro del rango de validez
+                if (!fechaCita.isBefore(hm.getFecha()) && 
+                    (hm.getValidUntil() == null || !fechaCita.isAfter(hm.getValidUntil()))) {
+                    horarioAplicable = hm;
+                    break;
+                }
+            }
+            
+            if (horarioAplicable == null) {
+                return Map.of("exito", false, "mensaje", "El médico no tiene horario disponible para la fecha solicitada");
+            }
+            
+            // Verificar que la hora esté dentro del horario laboral del médico
+            if (horaInicioCita.isBefore(horarioAplicable.getHorarioInicio()) || 
+                horaFinCita.isAfter(horarioAplicable.getHorarioFin())) {
+                return Map.of("exito", false, "mensaje", 
+                    String.format("El horario solicitado está fuera del horario laboral del médico (%s - %s)", 
+                        horarioAplicable.getHorarioInicio(), horarioAplicable.getHorarioFin()));
+            }
+            
+            // Verificar que no haya conflictos con otras citas del médico en esa fecha y hora
+            // Buscar citas en la agenda para este médico en este horario
+            List<Agenda> agendasOcupadas = agendaRepository.findAll().stream()
+                .filter(a -> a.getMedico() != null && a.getMedico().getId().equals(medicoId))
+                .filter(a -> a.getFecha() != null && a.getFecha().toLocalDate().equals(fechaCita))
+                .filter(a -> {
+                    // Verificar superposición de horarios
+                    LocalTime inicioExistente = a.getHoraInicio();
+                    LocalTime finExistente = a.getHoraFin();
+                    
+                    // Hay conflicto si los rangos se superponen
+                    return !(horaFinCita.isBefore(inicioExistente) || horaFinCita.equals(inicioExistente) ||
+                            horaInicioCita.isAfter(finExistente) || horaInicioCita.equals(finExistente));
+                })
+                .collect(Collectors.toList());
+            
+            if (!agendasOcupadas.isEmpty()) {
+                return Map.of("exito", false, "mensaje", "El horario solicitado ya está ocupado. Por favor selecciona otro horario.");
+            }
+            
+            // Crear registro en la agenda para esta cita
+            Agenda nuevaAgenda = new Agenda();
+            nuevaAgenda.setMedico(medico);
+            nuevaAgenda.setFecha(LocalDateTime.of(fechaCita, horaInicioCita));
+            nuevaAgenda.setHoraInicio(horaInicioCita);
+            nuevaAgenda.setHoraFin(horaFinCita);
+            
+            Agenda agendaGuardada = agendaRepository.save(nuevaAgenda);
+            log.info("Agenda creada para cita: ID {}, Médico: {}, Fecha: {}, Hora: {}-{}", 
+                     agendaGuardada.getId(), medicoId, fechaCita, horaInicioCita, horaFinCita);
+            
             // Verificar que el médico ofrezca el servicio
             // NOTA: Se relaja esta validación porque ahora el médico puede tener múltiples servicios o la relación puede ser compleja
             // Si el servicio existe y el médico tiene horario, permitimos la cita.
             
-            // Buscar estatus "PENDIENTE"
-            Optional<Estatus> estatusOpt = estatusRepository.findAll().stream()
-                .filter(e -> "PENDIENTE".equalsIgnoreCase(e.getEstatus()))
-                .findFirst();
-            
-            if (estatusOpt.isEmpty()) {
-                return Map.of("exito", false, "mensaje", "No se encontró el estatus PENDIENTE en el sistema");
-            }
-            
             // Crear la cita con estado PENDIENTE para que el médico la revise
             Cita nuevaCita = new Cita();
             nuevaCita.setPaciente(paciente);
-            nuevaCita.setMedico(horario.getMedico());
+            nuevaCita.setMedico(medico);
             nuevaCita.setServicio(servicio);
             nuevaCita.setFechaSolicitud(LocalDateTime.now());
             nuevaCita.setMotivo(motivo != null ? motivo : "Consulta médica");
@@ -677,69 +871,20 @@ public class IAAssistantService {
                     // Simular procesamiento de pago (en producción se integraría con pasarela)
                     nuevaCita.setEstadoPago("PAGADO");
                     nuevaCita.setFechaPago(LocalDateTime.now());
+                    nuevaCita.setMontoPagado(servicio.getCosto()); // IMPORTANTE: Asegurar que tenga el monto
                     
-                    // Cambiar estatus a CONFIRMADO si el pago fue exitoso
-                    Optional<Estatus> estatusConfirmado = estatusRepository.findAll().stream()
-                        .filter(e -> "Aceptada".equalsIgnoreCase(e.getEstatus()))
-                        .findFirst();
+                    // Generar un ID de pago simulado para compatibilidad con comprobantes
+                    nuevaCita.setIdPago(System.currentTimeMillis());
+                    nuevaCita.setNumeroReferenciaPago("REF-IA-" + System.currentTimeMillis());
+                    nuevaCita.setMetodoPago("Tarjeta de Crédito");
                     
-                    if (estatusConfirmado.isPresent()) {
-                        nuevaCita.setEstatus(estatusConfirmado.get());
+                    // MANTENER estado PENDIENTE para que el médico pueda aceptar
+                    // El PDF se enviará cuando el médico acepte la cita
+                    if (estatusPendiente.isPresent()) {
+                        nuevaCita.setEstatus(estatusPendiente.get());
                     }
                     
-                    log.info("Pago procesado exitosamente para cita IA");
-                    
-                    // Enviar comprobante de pago inmediatamente al paciente
-                    try {
-                        log.info("=== ENVIANDO COMPROBANTE DE PAGO INMEDIATO ===");
-                        String emailPaciente = paciente.getUsuario().getCorreoElectronico();
-                        String nombrePaciente = paciente.getUsuario().getNombre() + " " + paciente.getUsuario().getApellidoPaterno();
-                        
-                        String asunto = String.format("Comprobante de Pago - Cita Médica Confirmada #%s", nuevaCita.getId());
-                        String mensaje = String.format(
-                            "Estimado %s,\n\n" +
-                            "Su pago ha sido procesado exitosamente.\n\n" +
-                            "DETALLES DE LA CITA:\n" +
-                            "- ID de Cita: %s\n" +
-                            "- Servicio: %s\n" +
-                            "- Médico: %s %s\n" +
-                            "- Fecha: %s\n" +
-                            "- Hora: %s - %s\n" +
-                            "- Monto pagado: $%.2f\n" +
-                            "- Estado: CONFIRMADA\n\n" +
-                            "Adjunto encontrará el comprobante oficial de su pago.\n\n" +
-                            "Gracias por utilizar MediCitas.\n\n" +
-                            "Atentamente,\n" +
-                            "Equipo de MediCitas",
-                            nombrePaciente,
-                            nuevaCita.getId(),
-                            servicio.getNombreServicio(),
-                            horario.getMedico().getUsuario().getNombre(),
-                            horario.getMedico().getUsuario().getApellidoPaterno(),
-                            horario.getFecha().toLocalDate().toString(),
-                            horario.getHoraInicio().toString(),
-                            horario.getHoraFin().toString(),
-                            servicio.getCosto()
-                        );
-                        
-                        // Generar el PDF del comprobante
-                        log.info("Generando comprobante PDF para cita IA ID: {}", nuevaCita.getId());
-                        byte[] pdfComprobante = comprobanteService.generarComprobantePDF(nuevaCita);
-                        log.info("PDF generado exitosamente. Tamaño: {} bytes", pdfComprobante.length);
-                        
-                        // Nombre del archivo PDF
-                        String nombreArchivoPdf = String.format("Comprobante_Cita_%s.pdf", nuevaCita.getId());
-                        log.info("Nombre del archivo PDF: {}", nombreArchivoPdf);
-                        
-                        // Enviar email con el PDF adjunto
-                        log.info("Enviando email a: {} con comprobante adjunto", emailPaciente);
-                        emailService.enviarEmailConAdjunto(emailPaciente, asunto, mensaje, pdfComprobante, nombreArchivoPdf);
-                        log.info("=== COMPROBANTE DE PAGO ENVIADO EXITOSAMENTE ===");
-                        
-                    } catch (Exception emailEx) {
-                        log.error("Error enviando comprobante de pago inmediato: {}", emailEx.getMessage());
-                        // No fallar la operación por error de email
-                    }
+                    log.info("Pago procesado exitosamente para cita IA - Estado: PENDIENTE (requiere aceptación del médico)");
                     
                 } catch (Exception e) {
                     log.error("Error procesando pago para cita IA: {}", e.getMessage());
@@ -755,26 +900,29 @@ public class IAAssistantService {
                      citaGuardada.getEstadoPago(),
                      citaGuardada.getEstatus() != null ? citaGuardada.getEstatus().getEstatus() : "null");
             
-            // Asociar la agenda a todas las citas para que aparezcan en el calendario del médico
-            // El médico podrá aceptar, cancelar o posponer las citas desde su agenda
-            citaGuardada.setAgenda(horario);
+            // Asociar la agenda a la cita
+            citaGuardada.setAgenda(agendaGuardada);
             citaRepository.save(citaGuardada);
-            
-            // No eliminar la agenda, mantenerla para que el médico pueda gestionar todas las citas
-            log.info("Agenda mantenida para cita - médico puede gestionar desde calendario");
             
             log.info("Cita agendada exitosamente: ID {}", citaGuardada.getId());
             
+            // NO enviar comprobante inmediatamente - se enviará cuando el médico acepte la cita
+            if (pagoData != null && !pagoData.isEmpty() && "PAGADO".equals(citaGuardada.getEstadoPago())) {
+                log.info("=== PAGO PROCESADO - COMPROBANTE SE ENVIARÁ AL ACEPTAR CITA ===");
+                log.info("Cita agendada con pago exitoso ID: {}, Estado: PENDIENTE", citaGuardada.getId());
+                log.info("El comprobante PDF se enviará automáticamente cuando el médico acepte la cita");
+            }
+            
             // Notificar al médico sobre la nueva cita pendiente
             try {
-                String emailMedico = horario.getMedico().getUsuario().getCorreoElectronico();
+                String emailMedico = medico.getUsuario().getCorreoElectronico();
                 String nombrePaciente = paciente.getUsuario().getNombre() + " " + paciente.getUsuario().getApellidoPaterno();
-                String nombreMedico = horario.getMedico().getUsuario().getNombre() + " " + horario.getMedico().getUsuario().getApellidoPaterno();
+                String nombreMedico = medico.getUsuario().getNombre() + " " + medico.getUsuario().getApellidoPaterno();
                 String especialidad = servicio.getNombreServicio();
-                String fechaCita = horario.getFecha().toLocalDate().toString() + " " + horario.getHoraInicio().toString();
+                String fechaCitaStr = agendaGuardada.getFecha().toLocalDate().toString() + " " + agendaGuardada.getHoraInicio().toString();
                 
                 // Enviar notificación al médico
-                emailService.notificarNuevaCitaMedico(emailMedico, nombreMedico, nombrePaciente, especialidad, fechaCita, citaGuardada.getMotivo());
+                emailService.notificarNuevaCitaMedico(emailMedico, nombreMedico, nombrePaciente, especialidad, fechaCitaStr, citaGuardada.getMotivo());
                 
                 log.info("Notificación enviada al médico: {}", emailMedico);
             } catch (Exception emailEx) {
@@ -799,9 +947,9 @@ public class IAAssistantService {
                      "PAGADO".equals(citaGuardada.getEstadoPago()));
             
             if (tienePago) {
-                mensaje = "✅ ¡Pago procesado exitosamente! Tu cita está confirmada para [fecha y hora]. Recibirás el comprobante por email.";
-                estado = "CONFIRMADO";
-                log.info("✅ Cita CONFIRMADA con pago");
+                mensaje = "✅ ¡Pago procesado exitosamente! Tu cita está agendada y pendiente de aceptación del médico. Recibirás el comprobante PDF por email cuando el médico confirme la cita.";
+                estado = "PAGADO_PENDIENTE";
+                log.info("✅ Cita PAGADA pero PENDIENTE de aceptación médica");
             } else {
                 mensaje = "Cita agendada exitosamente. El médico revisará y confirmará la cita.";
                 estado = "PENDIENTE";
@@ -812,11 +960,11 @@ public class IAAssistantService {
             resultado.put("exito", true);
             resultado.put("mensaje", mensaje);
             resultado.put("citaId", citaGuardada.getId());
-            resultado.put("fecha", horario.getFecha().toLocalDate().toString());
-            resultado.put("horaInicio", horario.getHoraInicio().toString());
-            resultado.put("horaFin", horario.getHoraFin().toString());
-            resultado.put("medico", horario.getMedico().getUsuario().getNombre() + " " + 
-                           horario.getMedico().getUsuario().getApellidoPaterno());
+            resultado.put("fecha", agendaGuardada.getFecha().toLocalDate().toString());
+            resultado.put("horaInicio", agendaGuardada.getHoraInicio().toString());
+            resultado.put("horaFin", agendaGuardada.getHoraFin().toString());
+            resultado.put("medico", medico.getUsuario().getNombre() + " " + 
+                           medico.getUsuario().getApellidoPaterno());
             resultado.put("servicio", servicio.getNombreServicio());
             resultado.put("estado", estado);
             resultado.put("pago", citaGuardada.getEstadoPago());
@@ -1028,4 +1176,163 @@ public Map<String, Object> agendarCita
     
     }
         */
+
+    /**
+     * Busca un médico específico por nombre
+     */
+    public Map<String, Object> buscarMedicoPorNombre(String nombre) {
+        try {
+            log.info("🔍 Buscando médico por nombre: {}", nombre);
+            
+            // Buscar médico por nombre (puede ser parcial)
+            List<Medico> todosLosMedicos = medicoRepository.findAll();
+            List<Medico> medicosEncontrados = todosLosMedicos.stream()
+                .filter(medico -> {
+                    String nombreCompleto = medico.getUsuario().getNombre() + " " + 
+                                          medico.getUsuario().getApellidoPaterno();
+                    return nombreCompleto.toLowerCase().contains(nombre.toLowerCase());
+                })
+                .toList();
+            
+            if (medicosEncontrados.isEmpty()) {
+                log.warn("⚠️ No se encontró ningún médico con el nombre: {}", nombre);
+                return Map.of(
+                    "exito", false,
+                    "mensaje", "No se encontró ningún médico con el nombre '" + nombre + "'",
+                    "medicos", new ArrayList<>(),
+                    "total", 0
+                );
+            }
+            
+            // Obtener servicios de cada médico encontrado
+            List<Map<String, Object>> medicosConServicios = new ArrayList<>();
+            for (Medico medico : medicosEncontrados) {
+                Map<String, Object> medicoInfo = new HashMap<>();
+                medicoInfo.put("id", medico.getId());
+                medicoInfo.put("nombre", medico.getUsuario().getNombre());
+                medicoInfo.put("apellidoPaterno", medico.getUsuario().getApellidoPaterno());
+                medicoInfo.put("apellidoMaterno", medico.getUsuario().getApellidoMaterno());
+                medicoInfo.put("nombreCompleto", 
+                    "Dr. " + medico.getUsuario().getNombre() + " " + 
+                    medico.getUsuario().getApellidoPaterno());
+                
+                // Obtener servicios del médico
+                if (medico.getServicio() != null) {
+                    Map<String, Object> servicioInfo = new HashMap<>();
+                    servicioInfo.put("id", medico.getServicio().getId());
+                    servicioInfo.put("nombre", medico.getServicio().getNombreServicio());
+                    servicioInfo.put("descripcion", medico.getServicio().getDescripcionServicio());
+                    servicioInfo.put("costo", medico.getServicio().getCosto());
+                    medicoInfo.put("servicio", servicioInfo);
+                } else {
+                    medicoInfo.put("servicio", null);
+                }
+                
+                medicosConServicios.add(medicoInfo);
+            }
+            
+            log.info("✅ Encontrados {} médicos con el nombre '{}'", medicosEncontrados.size(), nombre);
+            
+            return Map.of(
+                "exito", true,
+                "mensaje", "Médicos encontrados correctamente",
+                "medicos", medicosConServicios,
+                "total", medicosEncontrados.size()
+            );
+            
+        } catch (Exception e) {
+            log.error("❌ Error buscando médico por nombre: {}", e.getMessage(), e);
+            return Map.of(
+                "exito", false,
+                "mensaje", "Error interno del servidor: " + e.getMessage(),
+                "medicos", new ArrayList<>(),
+                "total", 0
+            );
+        }
+    }
+
+    /**
+     * Obtiene los servicios que ofrece un médico específico
+     */
+    public Map<String, Object> obtenerServiciosMedico(Long medicoId) {
+        try {
+            log.info("🏥 Obteniendo servicios del médico ID: {}", medicoId);
+            
+            // Buscar el médico
+            Optional<Medico> medicoOpt = medicoRepository.findById(medicoId);
+            if (medicoOpt.isEmpty()) {
+                log.warn("⚠️ Médico no encontrado con ID: {}", medicoId);
+                return Map.of(
+                    "exito", false,
+                    "mensaje", "Médico no encontrado con ID: " + medicoId,
+                    "servicios", new ArrayList<>(),
+                    "total", 0
+                );
+            }
+            
+            Medico medico = medicoOpt.get();
+            
+            // Obtener información del médico
+            Map<String, Object> medicoInfo = new HashMap<>();
+            medicoInfo.put("id", medico.getId());
+            medicoInfo.put("nombre", medico.getUsuario().getNombre());
+            medicoInfo.put("apellidoPaterno", medico.getUsuario().getApellidoPaterno());
+            medicoInfo.put("apellidoMaterno", medico.getUsuario().getApellidoMaterno());
+            medicoInfo.put("nombreCompleto", 
+                "Dr. " + medico.getUsuario().getNombre() + " " + 
+                medico.getUsuario().getApellidoPaterno());
+            
+            // Obtener todos los servicios del médico (en la base de datos, puede haber múltiples registros)
+            List<Medico> registrosMedico = medicoRepository.findAllByUsuario_IdUsuario(medico.getUsuario().getIdUsuario());
+            
+            List<Map<String, Object>> servicios = new ArrayList<>();
+            for (Medico registro : registrosMedico) {
+                if (registro.getServicio() != null) {
+                    Map<String, Object> servicioInfo = new HashMap<>();
+                    servicioInfo.put("id", registro.getServicio().getId());
+                    servicioInfo.put("nombre", registro.getServicio().getNombreServicio());
+                    servicioInfo.put("descripcion", registro.getServicio().getDescripcionServicio());
+                    servicioInfo.put("costo", registro.getServicio().getCosto());
+                    
+                    // Verificar que no esté duplicado
+                    boolean yaExiste = servicios.stream()
+                        .anyMatch(s -> s.get("id").equals(registro.getServicio().getId()));
+                    
+                    if (!yaExiste) {
+                        servicios.add(servicioInfo);
+                    }
+                }
+            }
+            
+            log.info("✅ Encontrados {} servicios para el médico {}", servicios.size(), 
+                medico.getUsuario().getNombre());
+            
+            String mensaje;
+            if (servicios.isEmpty()) {
+                mensaje = "El Dr. " + medico.getUsuario().getNombre() + " " + 
+                         medico.getUsuario().getApellidoPaterno() + " no tiene servicios registrados";
+            } else {
+                mensaje = "El Dr. " + medico.getUsuario().getNombre() + " " + 
+                         medico.getUsuario().getApellidoPaterno() + " ofrece " + servicios.size() + 
+                         " tipo(s) de consulta";
+            }
+            
+            return Map.of(
+                "exito", true,
+                "mensaje", mensaje,
+                "medico", medicoInfo,
+                "servicios", servicios,
+                "total", servicios.size()
+            );
+            
+        } catch (Exception e) {
+            log.error("❌ Error obteniendo servicios del médico: {}", e.getMessage(), e);
+            return Map.of(
+                "exito", false,
+                "mensaje", "Error interno del servidor: " + e.getMessage(),
+                "servicios", new ArrayList<>(),
+                "total", 0
+            );
+        }
+    }
 }

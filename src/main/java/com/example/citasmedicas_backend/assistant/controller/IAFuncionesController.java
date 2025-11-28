@@ -77,6 +77,45 @@ public class IAFuncionesController {
     }
 
     /**
+     * Busca un médico específico por nombre
+     */
+    @GetMapping("/medico-por-nombre")
+    public ResponseEntity<Map<String, Object>> buscarMedicoPorNombre(
+            @RequestParam String nombre) {
+        log.info("API: Buscando médico por nombre: {}", nombre);
+        try {
+            Map<String, Object> resultado = iaService.buscarMedicoPorNombre(nombre);
+            log.info("Médico encontrado correctamente: {}", resultado);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            log.error("Error al buscar médico por nombre: ", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("exito", false);
+            error.put("mensaje", "Error al buscar médico: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    /**
+     * Obtiene los servicios que ofrece un médico específico
+     */
+    @GetMapping("/medico/{medicoId}/servicios")
+    public ResponseEntity<Map<String, Object>> obtenerServiciosMedico(@PathVariable Long medicoId) {
+        log.info("API: Obteniendo servicios del médico: {}", medicoId);
+        try {
+            Map<String, Object> resultado = iaService.obtenerServiciosMedico(medicoId);
+            log.info("Servicios del médico obtenidos correctamente: {}", resultado);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            log.error("Error al obtener servicios del médico: ", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("exito", false);
+            error.put("mensaje", "Error al obtener servicios del médico: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    /**
      * Obtiene próximos horarios disponibles
      * Si medicoId es null, retorna horarios de TODOS los médicos
      */
@@ -149,17 +188,20 @@ public class IAFuncionesController {
     public ResponseEntity<Map<String, Object>> agendarCita(@RequestBody Map<String, Object> body) {
         Long pacienteId = getLong(body, "pacienteId");
         Long usuarioId = getLong(body, "usuarioId"); // Nuevo parámetro opcional
-        Long horarioId = getLong(body, "horarioId");
+        Long medicoId = getLong(body, "medicoId");
+        String fecha = (String) body.get("fecha");
+        String horaInicio = (String) body.get("horaInicio");
+        String horaFin = (String) body.get("horaFin");
         Long servicioId = getLong(body, "servicioId");
         String motivo = (String) body.get("motivo");
         
         // Extraer datos de pago si están presentes
         Map<String, Object> pagoData = (Map<String, Object>) body.get("pago");
         
-        log.info("API: Agendando cita - Paciente: {}, Usuario: {}, Horario: {}, Servicio: {}", 
-                 pacienteId, usuarioId, horarioId, servicioId);
+        log.info("API: Agendando cita - Paciente: {}, Usuario: {}, Médico: {}, Fecha: {}, Hora: {}-{}, Servicio: {}", 
+                 pacienteId, usuarioId, medicoId, fecha, horaInicio, horaFin, servicioId);
         
-        return ResponseEntity.ok(iaService.agendarCita(pacienteId, usuarioId, horarioId, servicioId, motivo, pagoData));
+        return ResponseEntity.ok(iaService.agendarCita(pacienteId, usuarioId, medicoId, fecha, horaInicio, horaFin, servicioId, motivo, pagoData));
     }
 
     /**
